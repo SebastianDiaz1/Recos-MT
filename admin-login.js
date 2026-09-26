@@ -5,6 +5,17 @@ let recoLeafletMap=null;
 let recoMarkerLayer=null;
 let leafletLoading=null;
 
+(function warmMapConnections(){
+  ['https://unpkg.com','https://tile.openstreetmap.org'].forEach(href=>{
+    if(document.querySelector(`link[href="${href}"]`))return;
+    const link=document.createElement('link');
+    link.rel='preconnect';
+    link.href=href;
+    link.crossOrigin='anonymous';
+    document.head.appendChild(link);
+  });
+})();
+
 function loadLeaflet(){
   if(window.L)return Promise.resolve();
   if(leafletLoading)return leafletLoading;
@@ -22,6 +33,7 @@ function loadLeaflet(){
     script.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
     script.integrity='sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
     script.crossOrigin='';
+    script.async=true;
     script.onload=resolve;
     script.onerror=()=>reject(new Error('No se pudo cargar Leaflet'));
     document.head.appendChild(script);
@@ -69,9 +81,11 @@ window.renderMap=function(){
     if(!document.getElementById('mapSurface'))return;
     if(!recoLeafletMap){
       target.innerHTML='';
-      recoLeafletMap=L.map(target,{zoomControl:true,preferCanvas:true}).setView([-20.2307,-70.1357],12);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      recoLeafletMap=L.map(target,{zoomControl:true,preferCanvas:true,fadeAnimation:false,zoomAnimation:false}).setView([-20.2307,-70.1357],12);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
         maxZoom:19,
+        updateWhenIdle:true,
+        keepBuffer:3,
         attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
       }).addTo(recoLeafletMap);
       const legend=L.control({position:'topright'});
@@ -101,16 +115,18 @@ window.renderMap=function(){
     else if(bounds.length>1)recoLeafletMap.fitBounds(bounds,{padding:[35,35],maxZoom:15});
     else recoLeafletMap.setView([-20.2307,-70.1357],12);
 
-    setTimeout(()=>recoLeafletMap?.invalidateSize(),150);
+    requestAnimationFrame(()=>recoLeafletMap?.invalidateSize(false));
   }).catch(err=>{
     console.error(err);
     target.innerHTML='<div class="map-label">No se pudo cargar el mapa. Revisa la conexión a internet.</div>';
   });
 };
 
-// Refuerza la inicialización al entrar a la pestaña Mapa.
+// Precarga Leaflet apenas abre la app para que el mapa esté listo al entrar a la pestaña.
+loadLeaflet().catch(()=>{});
+
 document.addEventListener('click',e=>{
   const btn=e.target.closest('[data-view="mapa"]');
-  if(btn)setTimeout(()=>window.renderMap(),50);
+  if(btn)setTimeout(()=>window.renderMap(),0);
 });
 setTimeout(()=>{try{window.renderMap()}catch(e){console.error(e)}},0);
