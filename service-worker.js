@@ -1,5 +1,5 @@
-const CACHE="reco-mt-v21-protecciones-directas";
-const CORE=["./","./index.html","./styles.css?v=21","./app.js?v=21","./admin-login.js?v=21","./manifest.webmanifest?v=21"];
+const CACHE="reco-mt-v22-sin-pickup";
+const CORE=["./","./index.html","./styles.css?v=22","./app.js?v=22","./admin-login.js?v=22","./manifest.webmanifest?v=22"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)));self.skipWaiting();});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;const url=new URL(e.request.url);if(url.origin===self.location.origin){e.respondWith(fetch(e.request,{cache:"no-store"}).then(resp=>{const copy=resp.clone();caches.open(CACHE).then(c=>c.put(e.request,copy)).catch(()=>{});return resp;}).catch(()=>caches.match(e.request).then(r=>r||caches.match("./index.html"))))}});
