@@ -153,9 +153,57 @@ recoForm.addEventListener('submit',async e=>{
   }
 },true);
 
+// Vincula automáticamente al mapa los registros importados desde planillas.
+let importedGeoRunning=false;
+const importedGeoFailed=new Set();
+function hasUsableImportedLocation(r){
+  const u=String(r?.ubicacion||'').trim();
+  const a=String(r?.alimentador||'').trim();
+  if(!u||/^por registrar$/i.test(u))return false;
+  // Si solo se usó el nombre del alimentador como relleno, no se inventa una posición.
+  if(a&&u.localeCompare(a,undefined,{sensitivity:'accent'})===0)return false;
+  return true;
+}
+async function syncImportedLocations(){
+  if(importedGeoRunning||!isAdmin())return;
+  const pending=(state.reconectadores||[]).filter(r=>
+    (!Number.isFinite(Number(r.lat))||!Number.isFinite(Number(r.lon)))&&
+    hasUsableImportedLocation(r)&&
+    !importedGeoFailed.has(r.id)
+  );
+  if(!pending.length)return;
+  importedGeoRunning=true;
+  let linked=0;
+  try{
+    for(const r of pending){
+      const coords=await geocodeAddress(r.ubicacion);
+      if(coords){
+        const {error}=await sb.from('reconectadores').update({lat:coords.lat,lon:coords.lon}).eq('id',r.id);
+        if(!error){r.lat=coords.lat;r.lon=coords.lon;linked++;}
+        else{console.error(error);importedGeoFailed.add(r.id);}
+      }else{
+        importedGeoFailed.add(r.id);
+      }
+      // El servicio público de geocodificación se consulta de forma pausada.
+      await new Promise(resolve=>setTimeout(resolve,1100));
+    }
+  }finally{
+    importedGeoRunning=false;
+  }
+  if(linked){
+    window.renderMap();
+    renderRecos();
+    toast(`${linked} ${linked===1?'ubicación enlazada':'ubicaciones enlazadas'} al mapa`);
+  }
+}
+
+// Se revisan automáticamente nuevas filas importadas cuando el administrador tiene la app abierta.
+setTimeout(()=>syncImportedLocations(),2500);
+setInterval(()=>syncImportedLocations(),30000);
+
 document.addEventListener('click',e=>{
   const btn=e.target.closest('[data-view="mapa"]');
-  if(btn)setTimeout(()=>window.renderMap(),50);
+  if(btn){setTimeout(()=>window.renderMap(),50);setTimeout(()=>syncImportedLocations(),150);}
 });
 setTimeout(()=>{try{window.renderMap()}catch(e){console.error(e)}},150);
 
