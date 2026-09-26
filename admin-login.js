@@ -1,4 +1,4 @@
-// Mapa real estable para Reconectadores MT.
+// Mapa real y geocodificación automática para Reconectadores MT.
 let recoLeafletMap=null;
 let recoMarkerLayer=null;
 const IQQ_CENTER=[-20.2307,-70.1357];
@@ -22,6 +22,7 @@ const MAP_ZOOM=12;
     .mapLegend{display:flex;gap:10px;flex-wrap:wrap;padding:9px 12px;background:#fff;border:1px solid #e1e6ec;border-radius:8px;font-size:11px;font-weight:800;color:#596579}
     .mapLegend span{display:inline-flex;align-items:center;gap:5px}
     .mapLegend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+    .geoHint{font-size:11px;color:#6b7687;margin-top:5px;display:block}
     @media(max-width:760px){#mapSurface{height:55vh;min-height:380px}.map-layout{display:block}.map-layout>.panel:last-child{margin-top:12px}}
   `;
   document.head.appendChild(style);
@@ -37,7 +38,7 @@ window.renderMap=function(){
   if(!target||!list)return;
 
   const geocoded=(state.reconectadores||[]).filter(r=>Number.isFinite(Number(r.lat))&&Number.isFinite(Number(r.lon)));
-  list.innerHTML=geocoded.map(r=>`<div class="listRow"><div><strong>${escMap(r.codigo)} · ${escMap(r.ubicacion)}</strong><span class="tiny">${escMap(r.alimentador)} · ${Number(r.lat).toFixed(5)}, ${Number(r.lon).toFixed(5)}</span></div><div><button class="btn ghost" onclick="showReco(${r.id})">Ficha</button> <button class="btn ghost" onclick="googleRoute(${Number(r.lat)},${Number(r.lon)})">Cómo llegar</button></div></div>`).join('')||'<p class="muted">No hay equipos con coordenadas registradas. El mapa se encuentra centrado en Iquique.</p>';
+  list.innerHTML=geocoded.map(r=>`<div class="listRow"><div><strong>${escMap(r.codigo)} · ${escMap(r.ubicacion)}</strong><span class="tiny">${escMap(r.alimentador||'-')}</span></div><div><button class="btn ghost" onclick="showReco(${r.id})">Ficha</button> <button class="btn ghost" onclick="googleRoute(${Number(r.lat)},${Number(r.lon)})">Cómo llegar</button></div></div>`).join('')||'<p class="muted">Aún no hay equipos con una dirección reconocida por el mapa.</p>';
 
   if(typeof L==='undefined'){
     target.innerHTML='<div class="map-label">No se pudo iniciar el mapa. Cierra y vuelve a abrir la app.</div>';
@@ -53,7 +54,6 @@ window.renderMap=function(){
       keepBuffer:3,
       attribution:'&copy; OpenStreetMap contributors'
     }).addTo(recoLeafletMap);
-
     const legend=L.control({position:'topright'});
     legend.onAdd=()=>{
       const div=L.DomUtil.create('div','mapLegend');
@@ -72,7 +72,7 @@ window.renderMap=function(){
     const lat=Number(r.lat),lon=Number(r.lon),color=markerColor(r.estado);
     const marker=L.circleMarker([lat,lon],{radius:10,color:'#fff',weight:3,fillColor:color,fillOpacity:1});
     marker.bindTooltip(escMap(r.codigo),{direction:'top',offset:[0,-8],opacity:.95});
-    marker.bindPopup(`<div class="reco-map-popup"><h4>${escMap(r.codigo)}</h4><p><strong>${escMap(r.estado)}</strong></p><p>${escMap(r.alimentador)}</p><p>${escMap(r.ubicacion)}</p><div class="reco-map-actions"><button class="open" onclick="showReco(${r.id})">Abrir ficha</button><button class="route" onclick="googleRoute(${lat},${lon})">Cómo llegar</button></div></div>`);
+    marker.bindPopup(`<div class="reco-map-popup"><h4>${escMap(r.codigo)}</h4><p><strong>${escMap(r.estado)}</strong></p><p>${escMap(r.alimentador||'-')}</p><p>${escMap(r.ubicacion||'-')}</p><div class="reco-map-actions"><button class="open" onclick="showReco(${r.id})">Abrir ficha</button><button class="route" onclick="googleRoute(${lat},${lon})">Cómo llegar</button></div></div>`);
     marker.addTo(recoMarkerLayer);
     bounds.push([lat,lon]);
   });
@@ -80,9 +80,78 @@ window.renderMap=function(){
   if(bounds.length===1)recoLeafletMap.setView(bounds[0],15,{animate:false});
   else if(bounds.length>1)recoLeafletMap.fitBounds(bounds,{padding:[25,25],maxZoom:15,animate:false});
   else recoLeafletMap.setView(IQQ_CENTER,MAP_ZOOM,{animate:false});
-
   setTimeout(()=>recoLeafletMap?.invalidateSize(false),50);
 };
+
+function removeLegacyLocationFields(){
+  ['lat','lon','pickup'].forEach(name=>{
+    const el=document.querySelector(`#recoForm [name="${name}"]`);
+    if(el)el.closest('label')?.remove();
+  });
+  const ubicacion=document.querySelector('#recoForm [name="ubicacion"]');
+  if(ubicacion){
+    ubicacion.placeholder='Ej: Av. Arturo Prat 1234, Iquique';
+    const label=ubicacion.closest('label');
+    if(label&& !label.querySelector('.geoHint')){
+      const hint=document.createElement('span');
+      hint.className='geoHint';
+      hint.textContent='La app ubicará automáticamente esta dirección en el mapa.';
+      label.appendChild(hint);
+    }
+  }
+  const search=document.getElementById('searchReco');
+  if(search)search.placeholder='Buscar alimentador, equipo, ubicación...';
+  const mapText=document.querySelector('#mapa .panel:last-child .muted');
+  if(mapText)mapText.textContent='Los equipos aparecerán automáticamente en el mapa según la dirección ingresada en Ubicación.';
+}
+removeLegacyLocationFields();
+
+async function geocodeAddress(address){
+  const clean=String(address||'').trim();
+  if(!clean||/^por registrar$/i.test(clean))return null;
+  const attempts=[];
+  if(/iquique|alto hospicio|tarapac[aá]|chile/i.test(clean))attempts.push(clean);
+  else attempts.push(`${clean}, Iquique, Tarapacá, Chile`);
+  attempts.push(`${clean}, Chile`);
+  for(const q of attempts){
+    try{
+      const url=`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=cl&addressdetails=1&q=${encodeURIComponent(q)}`;
+      const resp=await fetch(url,{headers:{'Accept':'application/json'}});
+      if(!resp.ok)continue;
+      const data=await resp.json();
+      if(data?.length){
+        const lat=Number(data[0].lat),lon=Number(data[0].lon);
+        if(Number.isFinite(lat)&&Number.isFinite(lon))return {lat,lon};
+      }
+    }catch(err){console.warn('Geocodificación no disponible',err);}
+  }
+  return null;
+}
+
+// Intercepta el guardado para obtener latitud/longitud automáticamente desde Ubicación.
+recoForm.addEventListener('submit',async e=>{
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  if(!isAdmin())return;
+  const submit=e.submitter;
+  if(submit){submit.disabled=true;submit.textContent='Ubicando...';}
+  try{
+    const o=Object.fromEntries(new FormData(recoForm));
+    delete o.id;
+    delete o.lat;delete o.lon;delete o.pickup;
+    if(o.fecha_verificacion==='')o.fecha_verificacion=null;
+    const coords=await geocodeAddress(o.ubicacion);
+    o.lat=coords?coords.lat:null;
+    o.lon=coords?coords.lon:null;
+    const {error}=await sb.from('reconectadores').upsert(o,{onConflict:'codigo'});
+    if(error){console.error(error);return toast('No se pudo guardar');}
+    closeModal('recoModal');
+    await loadData();
+    toast(coords?'Equipo guardado y ubicado en el mapa':'Equipo guardado · dirección no localizada');
+  }finally{
+    if(submit){submit.disabled=false;submit.textContent='Guardar equipo';}
+  }
+},true);
 
 document.addEventListener('click',e=>{
   const btn=e.target.closest('[data-view="mapa"]');
@@ -90,30 +159,10 @@ document.addEventListener('click',e=>{
 });
 setTimeout(()=>{try{window.renderMap()}catch(e){console.error(e)}},150);
 
-// Ajuste de formulario y ficha técnica de protecciones.
-(function patchProtectionFields(){
-  const phaseOld=document.querySelector('#recoForm [name="sobrecorriente"]');
-  if(phaseOld){
-    const label=phaseOld.closest('label');
-    label.childNodes[0].nodeValue='Sobrecorriente Fase';
-    phaseOld.name='sobrecorriente_fase';
-    phaseOld.placeholder='Ej: 51P / 50P';
-  }
-  const residualOld=document.querySelector('#recoForm [name="curva"]');
-  if(residualOld){
-    const label=residualOld.closest('label');
-    label.childNodes[0].nodeValue='Sobrecorriente Residual';
-    residualOld.name='sobrecorriente_residual';
-    residualOld.placeholder='Ej: 51N / 50N';
-  }
-  const search=document.getElementById('searchReco');
-  if(search)search.placeholder='Buscar alimentador, equipo, ubicación, pickup...';
-})();
-
 renderRecos=function(){
   let q=(searchReco.value||'').toLowerCase(),f=filterStatus.value,b=filterBrand.value;
   let arr=state.reconectadores.filter(r=>(!f||r.estado===f)&&(!b||r.marca===b)&&Object.values(r).join(' ').toLowerCase().includes(q));
-  recoGrid.innerHTML=arr.map(r=>{let cls=r.estado==='Con observaciones'?'warnCard':r.estado==='Fuera de servicio'?'dangerCard':'';return `<div class="recoCard ${cls}" onclick="showReco(${r.id})"><span class="eyebrow">${r.alimentador||'-'}</span><div class="recoCode">${r.codigo}</div>${badge(r.estado)}<div class="metaGrid"><div class="metaBox"><span>Equipo</span><strong>${r.marca||'-'}</strong></div><div class="metaBox"><span>Ubicación</span><strong>${r.ubicacion}</strong></div><div class="metaBox"><span>Sobrecorriente fase</span><strong>${r.sobrecorriente_fase||'-'}</strong></div><div class="metaBox"><span>Sobrecorriente residual</span><strong>${r.sobrecorriente_residual||'-'}</strong></div><div class="metaBox"><span>Pickup</span><strong>${r.pickup||'-'}</strong></div></div><button class="btn primary">Abrir ficha técnica</button></div>`}).join('')||`<p class="muted">No hay equipos que coincidan con la búsqueda.</p>`;
+  recoGrid.innerHTML=arr.map(r=>{let cls=r.estado==='Con observaciones'?'warnCard':r.estado==='Fuera de servicio'?'dangerCard':'';return `<div class="recoCard ${cls}" onclick="showReco(${r.id})"><span class="eyebrow">${r.alimentador||'-'}</span><div class="recoCode">${r.codigo}</div>${badge(r.estado)}<div class="metaGrid"><div class="metaBox"><span>Equipo</span><strong>${r.marca||'-'}</strong></div><div class="metaBox"><span>Ubicación</span><strong>${r.ubicacion||'-'}</strong></div><div class="metaBox"><span>Sobrecorriente fase</span><strong>${r.sobrecorriente_fase||'-'}</strong></div><div class="metaBox"><span>Sobrecorriente residual</span><strong>${r.sobrecorriente_residual||'-'}</strong></div></div><button class="btn primary">Abrir ficha técnica</button></div>`}).join('')||`<p class="muted">No hay equipos que coincidan con la búsqueda.</p>`;
 };
 
 showReco=function(id){
@@ -121,8 +170,8 @@ showReco=function(id){
   let ins=state.inspecciones.filter(i=>i.equipo===r.codigo).sort((a,b)=>b.fecha.localeCompare(a.fecha));
   let last=ins[0];
   detailTitle.textContent=`${r.codigo} · ${r.ubicacion}`;
-  detailContent.innerHTML=`<div class="detailHero"><div class="detailMain"><span class="eyebrow">${r.alimentador||'-'}</span><h2>${r.codigo}</h2>${badge(r.estado)}<p>${r.observaciones||'Sin observaciones técnicas.'}</p>${isAdmin()?`<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn secondary" onclick="editReco(${r.id})">Editar equipo</button><button class="btn secondary" onclick="closeModal('detailModal');openInspection('${r.codigo}')">+ Nueva inspección</button><button class="btn ghost-light" style="border-color:#f0a39d;color:#fff" onclick="deleteReco(${r.id})">Eliminar equipo</button></div>`:''}</div><div class="detailAside"><h3>Estado actual</h3><div class="inspectionCard">${last?`<div class="inspectionTop"><strong>Última inspección</strong>${badge(last.resultado)}</div><p>${fmtDate(last.fecha)} · ${last.inspector}</p><p class="muted">${last.observaciones}</p>`:`<p class='muted'>Sin inspecciones registradas.</p>`}</div>${Number.isFinite(Number(r.lat))&&Number.isFinite(Number(r.lon))?`<button class="btn primary" onclick="window.open('https://www.google.com/maps?q=${r.lat},${r.lon}','_blank')">📍 Ver ubicación</button>`:''}</div></div><div class="detailStats"><div class="stat"><span>Alimentador</span><strong>${r.alimentador||'-'}</strong></div><div class="stat"><span>Equipo</span><strong>${r.codigo||'-'}</strong></div><div class="stat"><span>Sobrecorriente fase</span><strong>${r.sobrecorriente_fase||'-'}</strong></div><div class="stat"><span>Sobrecorriente residual</span><strong>${r.sobrecorriente_residual||'-'}</strong></div><div class="stat"><span>Pickup</span><strong>${r.pickup||'-'}</strong></div><div class="stat"><span>Equipo / referencia</span><strong>${r.marca||'-'}</strong></div><div class="stat"><span>Fecha verificación</span><strong>${fmtDate(r.fecha_verificacion)}</strong></div><div class="stat"><span>Estado</span><strong>${r.estado||'-'}</strong></div><div class="stat"><span>Ubicación</span><strong>${r.ubicacion||'-'}</strong></div></div><h3>Historial de inspecciones</h3><div class="history">${ins.map(i=>`<div class="historyItem"><h4>${fmtDate(i.fecha)} · ${i.inspector}</h4><p>${badge(i.resultado)} · Batería ${i.tension||'-'} V · Comunicación ${i.comunicaciones}</p><p>${i.observaciones||'Sin observaciones.'}</p></div>`).join('')||`<p class="muted">Sin inspecciones registradas.</p>`}</div>`;
+  detailContent.innerHTML=`<div class="detailHero"><div class="detailMain"><span class="eyebrow">${r.alimentador||'-'}</span><h2>${r.codigo}</h2>${badge(r.estado)}<p>${r.observaciones||'Sin observaciones técnicas.'}</p>${isAdmin()?`<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn secondary" onclick="editReco(${r.id})">Editar equipo</button><button class="btn secondary" onclick="closeModal('detailModal');openInspection('${r.codigo}')">+ Nueva inspección</button><button class="btn ghost-light" style="border-color:#f0a39d;color:#fff" onclick="deleteReco(${r.id})">Eliminar equipo</button></div>`:''}</div><div class="detailAside"><h3>Estado actual</h3><div class="inspectionCard">${last?`<div class="inspectionTop"><strong>Última inspección</strong>${badge(last.resultado)}</div><p>${fmtDate(last.fecha)} · ${last.inspector}</p><p class="muted">${last.observaciones}</p>`:`<p class='muted'>Sin inspecciones registradas.</p>`}</div>${Number.isFinite(Number(r.lat))&&Number.isFinite(Number(r.lon))?`<button class="btn primary" onclick="googleRoute(${Number(r.lat)},${Number(r.lon)})">📍 Cómo llegar</button>`:''}</div></div><div class="detailStats"><div class="stat"><span>Alimentador</span><strong>${r.alimentador||'-'}</strong></div><div class="stat"><span>Equipo</span><strong>${r.codigo||'-'}</strong></div><div class="stat"><span>Sobrecorriente fase</span><strong>${r.sobrecorriente_fase||'-'}</strong></div><div class="stat"><span>Sobrecorriente residual</span><strong>${r.sobrecorriente_residual||'-'}</strong></div><div class="stat"><span>Equipo / referencia</span><strong>${r.marca||'-'}</strong></div><div class="stat"><span>Fecha verificación</span><strong>${fmtDate(r.fecha_verificacion)}</strong></div><div class="stat"><span>Estado</span><strong>${r.estado||'-'}</strong></div><div class="stat"><span>Ubicación</span><strong>${r.ubicacion||'-'}</strong></div></div><h3>Historial de inspecciones</h3><div class="history">${ins.map(i=>`<div class="historyItem"><h4>${fmtDate(i.fecha)} · ${i.inspector}</h4><p>${badge(i.resultado)} · Batería ${i.tension||'-'} V · Comunicación ${i.comunicaciones}</p><p>${i.observaciones||'Sin observaciones.'}</p></div>`).join('')||`<p class="muted">Sin inspecciones registradas.</p>`}</div>`;
   openModal('detailModal');
 };
 
-setTimeout(()=>{try{renderRecos()}catch(e){console.error(e)}},250);
+setTimeout(()=>{try{removeLegacyLocationFields();renderRecos()}catch(e){console.error(e)}},250);
