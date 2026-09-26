@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d1a2a">
+<title>Acceso administrador · Reconectadores MT</title>
+<style>
+:root{--navy:#0d1a2a;--blue:#1559c9;--line:#dce3ec;--muted:#6d7788}*{box-sizing:border-box}body{margin:0;min-height:100vh;min-height:100dvh;font-family:Inter,Segoe UI,Arial,sans-serif;background:linear-gradient(145deg,#0c1928,#154d7d);display:grid;place-items:center;padding:20px;color:#172033}.card{width:min(100%,440px);background:#fff;border-radius:22px;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.28)}.logo{width:58px;height:58px;border-radius:17px;background:#eaf2ff;display:grid;place-items:center;font-size:28px;margin-bottom:16px}h1{margin:0 0 8px;font-size:25px}.muted{color:var(--muted);font-size:13px;line-height:1.5;margin-bottom:20px}label{display:block;font-size:12px;font-weight:800;color:#596579;margin:12px 0 5px}input{width:100%;padding:13px 12px;border:1px solid var(--line);border-radius:11px;font-size:16px}.btn{width:100%;border:0;border-radius:11px;padding:13px 15px;font-weight:900;font-size:15px;cursor:pointer;margin-top:14px}.primary{background:var(--blue);color:#fff}.ghost{background:#f5f7fa;color:#334155}.back{display:block;text-align:center;margin-top:16px;color:#46627e;text-decoration:none;font-size:13px;font-weight:800}#msg{min-height:20px;margin-top:12px;font-size:13px;text-align:center}.ok{color:#0f8a5f}.err{color:#b73932}.emailBox{background:#f6f8fb;border:1px solid #e5e9ef;border-radius:11px;padding:11px 12px;font-size:14px;font-weight:700;color:#445266}
+</style>
+</head>
+<body>
+<div class="card">
+ <div class="logo">⚡</div>
+ <h1>Acceso administrador</h1>
+ <p class="muted">Este acceso es solo para Sebastián. Los demás usuarios continúan usando la app en modo consulta.</p>
+ <label>Usuario</label>
+ <div class="emailBox">Sebastián Díaz</div>
+ <label for="password">Contraseña</label>
+ <input id="password" type="password" autocomplete="current-password" placeholder="Ingresa tu contraseña">
+ <button class="btn primary" id="loginBtn">Ingresar como administrador</button>
+ <button class="btn ghost" id="resetBtn">Olvidé / cambiar contraseña</button>
+ <div id="msg"></div>
+ <a class="back" href="./">← Volver a modo consulta</a>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL='https://aoskcafxlvwsjntnmqtb.supabase.co';
+const SUPABASE_KEY='sb_publishable_yraJ23uSvq02pf2X46Foyg_QvnSg62T';
+const ADMIN_EMAIL='sebastian.diaz93.sd@gmail.com';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const msg=document.getElementById('msg');
+function show(text,type=''){msg.textContent=text;msg.className=type}
+async function login(){
+ const password=document.getElementById('password').value;
+ if(!password){show('Ingresa tu contraseña.','err');return}
+ const btn=document.getElementById('loginBtn');btn.disabled=true;btn.textContent='Ingresando…';
+ const {data,error}=await sb.auth.signInWithPassword({email:ADMIN_EMAIL,password});
+ if(error){show('Contraseña incorrecta o acceso no disponible.','err');btn.disabled=false;btn.textContent='Ingresar como administrador';return}
+ if((data.user?.email||'').toLowerCase()!==ADMIN_EMAIL.toLowerCase()){await sb.auth.signOut();show('Esta cuenta no tiene permisos de administrador.','err');btn.disabled=false;btn.textContent='Ingresar como administrador';return}
+ show('Acceso correcto. Abriendo administración…','ok');
+ setTimeout(()=>location.href='./',500);
+}
+async function resetPassword(){
+ const {error}=await sb.auth.resetPasswordForEmail(ADMIN_EMAIL,{redirectTo:location.origin+location.pathname.replace(/admin\.html$/,'')});
+ if(error){show('No se pudo enviar el correo de recuperación.','err');return}
+ show('Te envié un correo para restablecer la contraseña.','ok');
+}
+document.getElementById('loginBtn').addEventListener('click',login);
+document.getElementById('resetBtn').addEventListener('click',resetPassword);
+document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+</script>
+</body>
+</html>
