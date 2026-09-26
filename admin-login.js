@@ -89,3 +89,40 @@ document.addEventListener('click',e=>{
   if(btn)setTimeout(()=>window.renderMap(),50);
 });
 setTimeout(()=>{try{window.renderMap()}catch(e){console.error(e)}},150);
+
+// Ajuste de formulario y ficha técnica de protecciones.
+(function patchProtectionFields(){
+  const phaseOld=document.querySelector('#recoForm [name="sobrecorriente"]');
+  if(phaseOld){
+    const label=phaseOld.closest('label');
+    label.childNodes[0].nodeValue='Sobrecorriente Fase';
+    phaseOld.name='sobrecorriente_fase';
+    phaseOld.placeholder='Ej: 51P / 50P';
+  }
+  const residualOld=document.querySelector('#recoForm [name="curva"]');
+  if(residualOld){
+    const label=residualOld.closest('label');
+    label.childNodes[0].nodeValue='Sobrecorriente Residual';
+    residualOld.name='sobrecorriente_residual';
+    residualOld.placeholder='Ej: 51N / 50N';
+  }
+  const search=document.getElementById('searchReco');
+  if(search)search.placeholder='Buscar alimentador, equipo, ubicación, pickup...';
+})();
+
+renderRecos=function(){
+  let q=(searchReco.value||'').toLowerCase(),f=filterStatus.value,b=filterBrand.value;
+  let arr=state.reconectadores.filter(r=>(!f||r.estado===f)&&(!b||r.marca===b)&&Object.values(r).join(' ').toLowerCase().includes(q));
+  recoGrid.innerHTML=arr.map(r=>{let cls=r.estado==='Con observaciones'?'warnCard':r.estado==='Fuera de servicio'?'dangerCard':'';return `<div class="recoCard ${cls}" onclick="showReco(${r.id})"><span class="eyebrow">${r.alimentador||'-'}</span><div class="recoCode">${r.codigo}</div>${badge(r.estado)}<div class="metaGrid"><div class="metaBox"><span>Equipo</span><strong>${r.marca||'-'}</strong></div><div class="metaBox"><span>Ubicación</span><strong>${r.ubicacion}</strong></div><div class="metaBox"><span>Sobrecorriente fase</span><strong>${r.sobrecorriente_fase||'-'}</strong></div><div class="metaBox"><span>Sobrecorriente residual</span><strong>${r.sobrecorriente_residual||'-'}</strong></div><div class="metaBox"><span>Pickup</span><strong>${r.pickup||'-'}</strong></div></div><button class="btn primary">Abrir ficha técnica</button></div>`}).join('')||`<p class="muted">No hay equipos que coincidan con la búsqueda.</p>`;
+};
+
+showReco=function(id){
+  let r=state.reconectadores.find(x=>x.id===id);if(!r)return;
+  let ins=state.inspecciones.filter(i=>i.equipo===r.codigo).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  let last=ins[0];
+  detailTitle.textContent=`${r.codigo} · ${r.ubicacion}`;
+  detailContent.innerHTML=`<div class="detailHero"><div class="detailMain"><span class="eyebrow">${r.alimentador||'-'}</span><h2>${r.codigo}</h2>${badge(r.estado)}<p>${r.observaciones||'Sin observaciones técnicas.'}</p>${isAdmin()?`<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn secondary" onclick="editReco(${r.id})">Editar equipo</button><button class="btn secondary" onclick="closeModal('detailModal');openInspection('${r.codigo}')">+ Nueva inspección</button><button class="btn ghost-light" style="border-color:#f0a39d;color:#fff" onclick="deleteReco(${r.id})">Eliminar equipo</button></div>`:''}</div><div class="detailAside"><h3>Estado actual</h3><div class="inspectionCard">${last?`<div class="inspectionTop"><strong>Última inspección</strong>${badge(last.resultado)}</div><p>${fmtDate(last.fecha)} · ${last.inspector}</p><p class="muted">${last.observaciones}</p>`:`<p class='muted'>Sin inspecciones registradas.</p>`}</div>${Number.isFinite(Number(r.lat))&&Number.isFinite(Number(r.lon))?`<button class="btn primary" onclick="window.open('https://www.google.com/maps?q=${r.lat},${r.lon}','_blank')">📍 Ver ubicación</button>`:''}</div></div><div class="detailStats"><div class="stat"><span>Alimentador</span><strong>${r.alimentador||'-'}</strong></div><div class="stat"><span>Equipo</span><strong>${r.codigo||'-'}</strong></div><div class="stat"><span>Sobrecorriente fase</span><strong>${r.sobrecorriente_fase||'-'}</strong></div><div class="stat"><span>Sobrecorriente residual</span><strong>${r.sobrecorriente_residual||'-'}</strong></div><div class="stat"><span>Pickup</span><strong>${r.pickup||'-'}</strong></div><div class="stat"><span>Equipo / referencia</span><strong>${r.marca||'-'}</strong></div><div class="stat"><span>Fecha verificación</span><strong>${fmtDate(r.fecha_verificacion)}</strong></div><div class="stat"><span>Estado</span><strong>${r.estado||'-'}</strong></div><div class="stat"><span>Ubicación</span><strong>${r.ubicacion||'-'}</strong></div></div><h3>Historial de inspecciones</h3><div class="history">${ins.map(i=>`<div class="historyItem"><h4>${fmtDate(i.fecha)} · ${i.inspector}</h4><p>${badge(i.resultado)} · Batería ${i.tension||'-'} V · Comunicación ${i.comunicaciones}</p><p>${i.observaciones||'Sin observaciones.'}</p></div>`).join('')||`<p class="muted">Sin inspecciones registradas.</p>`}</div>`;
+  openModal('detailModal');
+};
+
+setTimeout(()=>{try{renderRecos()}catch(e){console.error(e)}},250);
