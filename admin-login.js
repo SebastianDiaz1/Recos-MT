@@ -6,10 +6,10 @@ let recoMarkerLayer=null;
 let leafletLoading=null;
 const IQQ_CENTER=[-20.2307,-70.1357];
 const MAP_ZOOM=12;
-const TILE_URL='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+const TILE_URL='https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
 
 (function warmMapConnections(){
-  ['https://unpkg.com','https://a.basemaps.cartocdn.com','https://b.basemaps.cartocdn.com','https://c.basemaps.cartocdn.com','https://d.basemaps.cartocdn.com'].forEach(href=>{
+  ['https://unpkg.com','https://server.arcgisonline.com'].forEach(href=>{
     if(document.querySelector(`link[href="${href}"]`))return;
     const link=document.createElement('link');
     link.rel='preconnect';
@@ -78,13 +78,10 @@ function latLonToTile(lat,lon,z){
 }
 function warmIquiqueTiles(){
   const {x,y}=latLonToTile(IQQ_CENTER[0],IQQ_CENTER[1],MAP_ZOOM);
-  const hosts=['a','b','c','d'];
-  let k=0;
   for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
     const img=new Image();
-    const host=hosts[k++%hosts.length];
     img.decoding='async';
-    img.src=`https://${host}.basemaps.cartocdn.com/light_all/${MAP_ZOOM}/${x+dx}/${y+dy}.png`;
+    img.src=`https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${MAP_ZOOM}/${y+dy}/${x+dx}`;
   }
 }
 
@@ -103,11 +100,10 @@ window.renderMap=function(){
       target.innerHTML='';
       recoLeafletMap=L.map(target,{zoomControl:true,preferCanvas:true,fadeAnimation:false,zoomAnimation:false,markerZoomAnimation:false}).setView(IQQ_CENTER,MAP_ZOOM);
       L.tileLayer(TILE_URL,{
-        subdomains:'abcd',
         maxZoom:19,
         updateWhenIdle:true,
         keepBuffer:4,
-        attribution:'&copy; OpenStreetMap contributors &copy; CARTO'
+        attribution:'Tiles &copy; Esri &mdash; Sources: Esri, HERE, Garmin, USGS, Intermap, INCREMENT P, NRCAN, METI, TomTom'
       }).addTo(recoLeafletMap);
       const legend=L.control({position:'topright'});
       legend.onAdd=()=>{
@@ -143,7 +139,6 @@ window.renderMap=function(){
   });
 };
 
-// Precarga mapa y teselas de Iquique desde el inicio.
 loadLeaflet().catch(()=>{});
 warmIquiqueTiles();
 
