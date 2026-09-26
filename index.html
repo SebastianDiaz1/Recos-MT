@@ -7,13 +7,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Reconectadores MT">
-<link rel="manifest" href="manifest.webmanifest">
+<link rel="manifest" href="manifest.webmanifest?v=21">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>Reconectadores MT · Iquique</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=21">
 </head>
 <body>
 <header class="topbar">
@@ -23,43 +23,38 @@
 <nav class="tabs"><button class="tab active" data-view="inicio">Inicio</button><button class="tab" data-view="catalogo">Explorar equipos</button><button class="tab" data-view="mapa">Mapa / ubicación</button><button class="tab adminOnly" data-view="administrar">Administrar</button></nav>
 <main>
 <section id="inicio" class="view active-view"><div class="hero"><div><span class="eyebrow">GESTIÓN DE ACTIVOS MT</span><h2>Todos los reconectadores, en un solo lugar.</h2><p>Consulta rápidamente el estado, alimentador, ubicación, ajustes de protección e historial técnico de cada equipo.</p><div class="hero-buttons"><button class="btn primary" onclick="goView('catalogo')">Explorar reconectadores</button><button class="btn secondary adminOnly" onclick="newReco()">+ Agregar equipo</button></div></div><div class="hero-visual"><div class="pulse-ring"><div class="pulse-core">⚡</div></div><div class="hero-label">Red MT · Iquique</div></div></div><div id="kpis" class="cards"></div><div class="grid2"><div class="panel"><div class="panel-head"><h3>Estado de la flota</h3><span class="muted">Resumen visual</span></div><div id="fleetHealth"></div></div><div class="panel"><div class="panel-head"><h3>Actividad reciente</h3><span class="muted">Últimas inspecciones</span></div><div id="recentActivity"></div></div></div><div class="panel" style="margin-top:16px"><div class="panel-head"><h3>Equipos que requieren atención</h3><span class="muted">Prioridad operativa</span></div><div id="attentionStrip" class="attentionStrip"></div></div></section>
-<section id="catalogo" class="view"><div class="sectionTitle"><div><span class="eyebrow">CATÁLOGO INTERACTIVO</span><h2>Reconectadores</h2></div><button class="btn primary adminOnly" onclick="newReco()">+ Nuevo reconectador</button></div><div class="panel"><div class="filters"><input id="searchReco" placeholder="Buscar alimentador, equipo, ubicación, curva, pickup..."><select id="filterStatus"><option value="">Todos los estados</option><option>Operativo</option><option>Con observaciones</option><option>Fuera de servicio</option></select><select id="filterBrand"><option value="">Todos los equipos</option></select></div><div id="recoGrid" class="recoGrid"></div></div></section>
+<section id="catalogo" class="view"><div class="sectionTitle"><div><span class="eyebrow">CATÁLOGO INTERACTIVO</span><h2>Reconectadores</h2></div><button class="btn primary adminOnly" onclick="newReco()">+ Nuevo reconectador</button></div><div class="panel"><div class="filters"><input id="searchReco" placeholder="Buscar alimentador, equipo, ubicación, pickup..."><select id="filterStatus"><option value="">Todos los estados</option><option>Operativo</option><option>Con observaciones</option><option>Fuera de servicio</option></select><select id="filterBrand"><option value="">Todos los equipos</option></select></div><div id="recoGrid" class="recoGrid"></div></div></section>
 <section id="mapa" class="view"><div class="sectionTitle"><div><span class="eyebrow">UBICACIÓN GEOGRÁFICA</span><h2>Mapa de reconectadores</h2></div></div><div class="map-layout"><div class="panel map-panel"><div class="map-surface" id="mapSurface"></div></div><div class="panel"><h3>Equipos georreferenciados</h3><p class="muted">Los equipos con latitud y longitud aparecerán automáticamente en el mapa.</p><div id="mapList"></div></div></div></section>
 <section id="administrar" class="view"><div class="sectionTitle"><div><span class="eyebrow">SOLO ADMINISTRADOR</span><h2>Administración</h2></div></div><div class="adminGrid"><div class="panel"><h3>Base maestra</h3><p class="muted">Gestiona los datos técnicos de los reconectadores.</p><button class="btn primary" onclick="newReco()">+ Agregar reconectador</button></div><div class="panel"><h3>Respaldo</h3><p class="muted">Descarga una copia completa de la base.</p><button class="btn primary" onclick="downloadBackup()">Descargar respaldo</button></div></div></section>
 </main>
-
 <dialog id="accessModal" class="modal smallModal"><div class="modalBox"><div class="modalHead"><div><span class="eyebrow">ADMINISTRADOR</span><h3>Acceso de edición</h3></div><button class="x" onclick="closeModal('accessModal')">✕</button></div><p class="muted">Acceso reservado para administración.</p></div></dialog>
-
 <dialog id="recoModal" class="modal wide">
 <form id="recoForm" class="modalBox">
-  <div class="modalHead"><div><span class="eyebrow">BASE MAESTRA</span><h3 id="recoFormTitle">Nuevo reconectador</h3></div><button type="button" class="x" onclick="closeModal('recoModal')">✕</button></div>
-  <input type="hidden" name="id">
-  <div class="formGrid">
-    <label>ALIMENTADOR<input name="alimentador" required placeholder="Ej: 52C26 Boro"></label>
-    <label>Equipo<input name="codigo" required placeholder="Ej: RC-01"></label>
-    <label>Sobrecorriente<input name="sobrecorriente" placeholder="Ej: 51 / 50"></label>
-    <label>CURVA<input name="curva" placeholder="Ej: IEC Normal Inverse"></label>
-    <label>PICKUP<input name="pickup" placeholder="Ej: 200 A"></label>
-    <label>EQUIPO<input name="marca" required placeholder="Ej: NOJA OSM / Arteche"></label>
-    <label>FECHA VERIFICACIÓN<input type="date" name="fecha_verificacion"></label>
-    <label>Estado<select name="estado" required><option>Operativo</option><option>Con observaciones</option><option>Fuera de servicio</option></select></label>
-    <label>Ubicación<input name="ubicacion" required placeholder="Sector, calle o referencia"></label>
-    <label>Latitud <span class="muted">(opcional para mapa)</span><input name="lat" inputmode="decimal" placeholder="-20.2307"></label>
-    <label>Longitud <span class="muted">(opcional para mapa)</span><input name="lon" inputmode="decimal" placeholder="-70.1357"></label>
-  </div>
-  <label>Observaciones<textarea name="observaciones" rows="4" placeholder="Antecedentes, ajustes, anomalías o comentarios técnicos"></textarea></label>
-  <div class="modalActions"><button type="button" class="btn ghost" onclick="closeModal('recoModal')">Cancelar</button><button class="btn primary">Guardar equipo</button></div>
+<div class="modalHead"><div><span class="eyebrow">BASE MAESTRA</span><h3 id="recoFormTitle">Nuevo reconectador</h3></div><button type="button" class="x" onclick="closeModal('recoModal')">✕</button></div>
+<input type="hidden" name="id">
+<div class="formGrid">
+<label>ALIMENTADOR<input name="alimentador" required placeholder="Ej: 52C26 Boro"></label>
+<label>Equipo<input name="codigo" required placeholder="Ej: RC-01"></label>
+<label>Sobrecorriente Fase<input name="sobrecorriente_fase" placeholder="Ej: 51P / 50P"></label>
+<label>Sobrecorriente Residual<input name="sobrecorriente_residual" placeholder="Ej: 51N / 50N"></label>
+<label>PICKUP<input name="pickup" placeholder="Ej: 200 A"></label>
+<label>EQUIPO<input name="marca" required placeholder="Ej: NOJA OSM / Arteche"></label>
+<label>FECHA VERIFICACIÓN<input type="date" name="fecha_verificacion"></label>
+<label>Estado<select name="estado" required><option>Operativo</option><option>Con observaciones</option><option>Fuera de servicio</option></select></label>
+<label>Ubicación<input name="ubicacion" required placeholder="Sector, calle o referencia"></label>
+<label>Latitud <span class="muted">(opcional para mapa)</span><input name="lat" inputmode="decimal" placeholder="-20.2307"></label>
+<label>Longitud <span class="muted">(opcional para mapa)</span><input name="lon" inputmode="decimal" placeholder="-70.1357"></label>
+</div>
+<label>Observaciones<textarea name="observaciones" rows="4" placeholder="Antecedentes, ajustes, anomalías o comentarios técnicos"></textarea></label>
+<div class="modalActions"><button type="button" class="btn ghost" onclick="closeModal('recoModal')">Cancelar</button><button class="btn primary">Guardar equipo</button></div>
 </form>
 </dialog>
-
 <dialog id="detailModal" class="modal xwide"><div class="modalBox"><div class="modalHead"><div><span class="eyebrow">FICHA DEL RECONECTADOR</span><h3 id="detailTitle"></h3></div><button class="x" onclick="closeModal('detailModal')">✕</button></div><div id="detailContent"></div></div></dialog>
-
 <dialog id="inspectionModal" class="modal wide"><form id="inspectionForm" class="modalBox"><div class="modalHead"><div><span class="eyebrow">INSPECCIÓN TÉCNICA</span><h3 id="inspectionTitle"></h3></div><button type="button" class="x" onclick="closeModal('inspectionModal')">✕</button></div><input type="hidden" name="equipo"><div class="formGrid"><label>Fecha<input name="fecha" type="date" required></label><label>Inspector<input name="inspector" required></label><label>Resultado<select name="resultado"><option>Conforme</option><option>Con observaciones</option><option>Requiere intervención</option></select></label><label>Contador de operaciones<input name="operaciones" type="number" min="0"></label><label>Tensión batería (V)<input name="tension" type="number" step="0.01"></label><label>Comunicación<select name="comunicaciones"><option>Normal</option><option>Intermitente</option><option>Sin comunicación</option></select></label></div><div class="checkGrid"><label><input type="checkbox" name="visual"> Estado visual</label><label><input type="checkbox" name="gabinete"> Gabinete</label><label><input type="checkbox" name="bateria"> Batería / cargador</label><label><input type="checkbox" name="apertura"> Apertura</label><label><input type="checkbox" name="cierre"> Cierre</label><label><input type="checkbox" name="protecciones"> Protecciones</label><label><input type="checkbox" name="tierra"> Puesta a tierra</label><label><input type="checkbox" name="limpieza"> Limpieza</label></div><label>Observaciones<textarea name="observaciones" rows="4"></textarea></label><div class="modalActions"><button type="button" class="btn ghost" onclick="closeModal('inspectionModal')">Cancelar</button><button class="btn primary">Guardar inspección</button></div></form></dialog>
-
 <button id="installBtn" class="installFab" style="display:none">Instalar app</button><div id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
-<script src="app.js"></script><script src="admin-login.js"></script>
-<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("service-worker.js"));}let deferredPrompt;window.addEventListener("beforeinstallprompt",(e)=>{e.preventDefault();deferredPrompt=e;document.getElementById("installBtn").style.display="block";});document.getElementById("installBtn").addEventListener("click",async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;document.getElementById("installBtn").style.display="none";});window.addEventListener("appinstalled",()=>document.getElementById("installBtn").style.display="none");</script>
+<script src="app.js?v=21"></script><script src="admin-login.js?v=21"></script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("service-worker.js?v=21",{updateViaCache:"none"}));}let deferredPrompt;window.addEventListener("beforeinstallprompt",(e)=>{e.preventDefault();deferredPrompt=e;document.getElementById("installBtn").style.display="block";});document.getElementById("installBtn").addEventListener("click",async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;document.getElementById("installBtn").style.display="none";});window.addEventListener("appinstalled",()=>document.getElementById("installBtn").style.display="none");</script>
 </body>
 </html>
