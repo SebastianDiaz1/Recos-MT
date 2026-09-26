@@ -42,9 +42,10 @@ async function login(){
  setTimeout(()=>location.href='./',500);
 }
 async function resetPassword(){
- const {error}=await sb.auth.resetPasswordForEmail(ADMIN_EMAIL,{redirectTo:location.origin+location.pathname.replace(/admin\.html$/,'')});
+ const resetUrl=new URL('reset.html',location.href).href;
+ const {error}=await sb.auth.resetPasswordForEmail(ADMIN_EMAIL,{redirectTo:resetUrl});
  if(error){show('No se pudo enviar el correo de recuperación.','err');return}
- show('Te envié un correo para restablecer la contraseña.','ok');
+ show('Te envié un correo para crear una nueva contraseña.','ok');
 }
 document.getElementById('loginBtn').addEventListener('click',login);
 document.getElementById('resetBtn').addEventListener('click',resetPassword);
