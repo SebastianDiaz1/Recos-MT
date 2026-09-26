@@ -52,19 +52,9 @@ function loadLeaflet(){
   document.head.appendChild(style);
 })();
 
-function escMap(v){
-  return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-}
-
-function markerColor(estado){
-  if(estado==='Fuera de servicio')return '#c64238';
-  if(estado==='Con observaciones')return '#d18400';
-  return '#0f8a5f';
-}
-
-function googleRoute(lat,lon){
-  window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(lat+','+lon)}`,'_blank');
-}
+function escMap(v){return String(v??'').replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]));}
+function markerColor(estado){if(estado==='Fuera de servicio')return '#c64238';if(estado==='Con observaciones')return '#d18400';return '#0f8a5f';}
+function googleRoute(lat,lon){window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(lat+','+lon)}`,'_blank');}
 
 window.renderMap=function(){
   const target=document.getElementById('mapSurface');
@@ -72,20 +62,14 @@ window.renderMap=function(){
   if(!target||!list)return;
 
   const geocoded=(state.reconectadores||[]).filter(r=>Number.isFinite(Number(r.lat))&&Number.isFinite(Number(r.lon)));
-  list.innerHTML=geocoded.map(r=>`<div class="listRow"><div><strong>${escMap(r.codigo)} · ${escMap(r.ubicacion)}</strong><span class="tiny">${escMap(r.alimentador)} · ${Number(r.lat).toFixed(5)}, ${Number(r.lon).toFixed(5)}</span></div><div><button class="btn ghost" onclick="showReco(${r.id})">Ficha</button> <button class="btn ghost" onclick="googleRoute(${Number(r.lat)},${Number(r.lon)})">Cómo llegar</button></div></div>`).join('')||'<p class="muted">No hay equipos con coordenadas registradas.</p>';
+  list.innerHTML=geocoded.map(r=>`<div class="listRow"><div><strong>${escMap(r.codigo)} · ${escMap(r.ubicacion)}</strong><span class="tiny">${escMap(r.alimentador)} · ${Number(r.lat).toFixed(5)}, ${Number(r.lon).toFixed(5)}</span></div><div><button class="btn ghost" onclick="showReco(${r.id})">Ficha</button> <button class="btn ghost" onclick="googleRoute(${Number(r.lat)},${Number(r.lon)})">Cómo llegar</button></div></div>`).join('')||'<p class="muted">No hay equipos con coordenadas registradas. El mapa se encuentra centrado en Iquique.</p>';
 
-  if(!geocoded.length){
-    if(recoLeafletMap){recoLeafletMap.remove();recoLeafletMap=null;recoMarkerLayer=null;}
-    target.innerHTML='<div class="map-label">No hay equipos con coordenadas registradas.</div>';
-    return;
-  }
-
-  target.innerHTML='<div class="map-label">Cargando mapa real...</div>';
+  target.innerHTML='<div class="map-label">Cargando mapa...</div>';
   loadLeaflet().then(()=>{
     if(!document.getElementById('mapSurface'))return;
     if(!recoLeafletMap){
       target.innerHTML='';
-      recoLeafletMap=L.map(target,{zoomControl:true,preferCanvas:true});
+      recoLeafletMap=L.map(target,{zoomControl:true,preferCanvas:true}).setView([-20.2307,-70.1357],12);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
         maxZoom:19,
         attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
@@ -114,13 +98,19 @@ window.renderMap=function(){
     });
 
     if(bounds.length===1)recoLeafletMap.setView(bounds[0],15);
-    else recoLeafletMap.fitBounds(bounds,{padding:[35,35],maxZoom:15});
-    setTimeout(()=>recoLeafletMap?.invalidateSize(),100);
+    else if(bounds.length>1)recoLeafletMap.fitBounds(bounds,{padding:[35,35],maxZoom:15});
+    else recoLeafletMap.setView([-20.2307,-70.1357],12);
+
+    setTimeout(()=>recoLeafletMap?.invalidateSize(),150);
   }).catch(err=>{
     console.error(err);
     target.innerHTML='<div class="map-label">No se pudo cargar el mapa. Revisa la conexión a internet.</div>';
   });
 };
 
-// Si la base ya alcanzó a cargar antes que este módulo, reemplaza inmediatamente el mapa esquemático.
-setTimeout(()=>{try{renderMap()}catch(e){console.error(e)}},0);
+// Refuerza la inicialización al entrar a la pestaña Mapa.
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('[data-view="mapa"]');
+  if(btn)setTimeout(()=>window.renderMap(),50);
+});
+setTimeout(()=>{try{window.renderMap()}catch(e){console.error(e)}},0);
