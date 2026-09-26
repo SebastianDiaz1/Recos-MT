@@ -48,12 +48,31 @@ function editReco(id){if(!isAdmin())return;let r=state.reconectadores.find(x=>x.
 recoForm.addEventListener("submit",async e=>{e.preventDefault();if(!isAdmin())return;let o=Object.fromEntries(new FormData(e.target));delete o.id;["lat","lon"].forEach(k=>{if(o[k]==="")o[k]=null;else if(o[k]!=null)o[k]=Number(o[k])});["instalacion","ultima","proxima"].forEach(k=>{if(o[k]==="")o[k]=null});const {error}=await sb.from('reconectadores').upsert(o,{onConflict:'codigo'});if(error){console.error(error);return toast("No se pudo guardar")};closeModal("recoModal");await loadData();toast("Reconectador guardado en línea")});
 function openInspection(code){if(!isAdmin())return;inspectionForm.reset();inspectionForm.equipo.value=code;inspectionForm.fecha.value=today();inspectionForm.inspector.value=state.session.name;document.querySelectorAll(".checkGrid input").forEach(x=>x.checked=true);inspectionTitle.textContent=code;openModal("inspectionModal")}
 inspectionForm.addEventListener("submit",async e=>{e.preventDefault();if(!isAdmin())return;let f=new FormData(e.target),check={};document.querySelectorAll(".checkGrid input").forEach(x=>check[x.name]=x.checked);const row={equipo:f.get("equipo"),fecha:f.get("fecha"),inspector:f.get("inspector"),resultado:f.get("resultado"),operaciones:Number(f.get("operaciones")||0),tension:f.get("tension")?Number(f.get("tension")):null,comunicaciones:f.get("comunicaciones"),observaciones:f.get("observaciones"),checklist:check};const {error}=await sb.from('inspecciones').insert(row);if(error){console.error(error);return toast("No se pudo guardar la inspección")};closeModal("inspectionModal");await loadData();toast("Inspección guardada en línea")});
-function openAccess(){accessEmail.value=state.session.email||ADMIN_EMAIL;openModal("accessModal")}
-async function sendMagicLink(){const email=accessEmail.value.trim();if(!email)return toast("Ingresa tu correo");const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:window.location.href}});if(error){console.error(error);return toast("No se pudo enviar el acceso")};toast("Revisa tu correo y abre el enlace de acceso")}
+
+function buildAdminPasswordModal(){
+ const modal=document.getElementById('accessModal');
+ if(!modal)return;
+ modal.innerHTML=`<div class="modalBox"><div class="modalHead"><div><span class="eyebrow">ADMINISTRADOR</span><h3>Acceso de edición</h3></div><button class="x" onclick="closeModal('accessModal')">✕</button></div><p class="muted">Ingresa la contraseña de administrador.</p><label>Contraseña<input id="accessPassword" type="password" autocomplete="current-password" placeholder="Contraseña"></label><button class="btn primary full" onclick="loginAdminPassword()">Ingresar como administrador</button><button class="btn ghost full" style="margin-top:8px" onclick="logoutAdmin()">Salir de administrador</button></div>`;
+}
+function openAccess(){
+ buildAdminPasswordModal();
+ const p=document.getElementById('accessPassword');
+ if(p)p.value='';
+ openModal("accessModal");
+ setTimeout(()=>document.getElementById('accessPassword')?.focus(),100);
+}
+async function loginAdminPassword(){
+ const password=document.getElementById('accessPassword')?.value||'';
+ if(!password)return toast("Ingresa la contraseña");
+ const {error}=await sb.auth.signInWithPassword({email:ADMIN_EMAIL,password});
+ if(error){console.error(error);const p=document.getElementById('accessPassword');if(p)p.value='';return toast("Contraseña incorrecta");}
+ await refreshSession();renderAll();closeModal("accessModal");toast("Modo administrador activado");
+}
 async function logoutAdmin(){await sb.auth.signOut();await refreshSession();renderAll();closeModal("accessModal");toast("Modo consulta activado")}
 function goView(id){document.querySelector(`[data-view="${id}"]`).click()}
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.view==="administrar"&&!isAdmin())return;document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".view").forEach(x=>x.classList.remove("active-view"));document.getElementById(b.dataset.view).classList.add("active-view");if(b.dataset.view==="mapa")renderMap()}));
 searchReco.addEventListener("input",renderRecos);filterStatus.addEventListener("change",renderRecos);filterBrand.addEventListener("change",renderRecos);
 function downloadBackup(){let b=new Blob([JSON.stringify({reconectadores:state.reconectadores,inspecciones:state.inspecciones},null,2)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=`reconectadores_mt_${today()}.json`;a.click();URL.revokeObjectURL(u)}
 function renderAll(){renderAccess();renderDashboard();renderFilters();renderRecos();renderMap()}
+buildAdminPasswordModal();
 (async()=>{await refreshSession();await loadData();sb.auth.onAuthStateChange(async()=>{await refreshSession();renderAll()});setInterval(()=>loadData(false),20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadData(false)});})();
