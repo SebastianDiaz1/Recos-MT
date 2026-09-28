@@ -12,13 +12,20 @@ const MAP_ZOOM=12;
     #mapSurface{min-height:540px;height:62vh;max-height:720px;background:#edf1f5!important;overflow:hidden;position:relative}
     #mapSurface:before{display:none!important}
     #mapSurface .leaflet-control-attribution{font-size:9px}
-    .reco-map-popup{min-width:210px;font-family:Inter,Segoe UI,Arial,sans-serif}
+    .reco-map-popup{min-width:240px;font-family:Inter,Segoe UI,Arial,sans-serif}
     .reco-map-popup h4{margin:0 0 5px;font-size:17px;color:#172033}
     .reco-map-popup p{margin:3px 0;color:#606b7b;font-size:12px;line-height:1.35}
     .reco-map-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
     .reco-map-actions button{border:0;border-radius:8px;padding:8px 10px;font-weight:800;font-size:11px;cursor:pointer}
     .reco-map-actions .open{background:#1559c9;color:#fff}
     .reco-map-actions .route{background:#eef3f8;color:#24374d}
+    .reco-group-marker{width:30px;height:30px;border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+    .reco-group-list{margin-top:8px;border-top:1px solid #e6eaf0}
+    .reco-group-item{padding:8px 0;border-bottom:1px solid #eef1f4}
+    .reco-group-item:last-child{border-bottom:0}
+    .reco-group-item strong{font-size:13px;color:#172033}
+    .reco-group-item span{display:block;font-size:11px;color:#606b7b;margin-top:2px}
+    .reco-group-item button{margin-top:5px;border:0;border-radius:7px;padding:6px 9px;background:#1559c9;color:#fff;font-size:10px;font-weight:800;cursor:pointer}
     .mapLegend{display:flex;gap:10px;flex-wrap:wrap;padding:9px 12px;background:#fff;border:1px solid #e1e6ec;border-radius:8px;font-size:11px;font-weight:800;color:#596579}
     .mapLegend span{display:inline-flex;align-items:center;gap:5px}
     .mapLegend i{width:10px;height:10px;border-radius:50%;display:inline-block}
@@ -30,7 +37,18 @@ const MAP_ZOOM=12;
 
 function escMap(v){return String(v??'').replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]));}
 function markerColor(estado){if(estado==='Fuera de servicio')return '#c64238';if(estado==='Con observaciones')return '#d18400';return '#0f8a5f';}
+function groupMarkerColor(items){if(items.some(r=>r.estado==='Fuera de servicio'))return '#c64238';if(items.some(r=>r.estado==='Con observaciones'))return '#d18400';return '#0f8a5f';}
 function googleRoute(lat,lon){window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(lat+','+lon)}`,'_blank');}
+function coordinateGroups(rows){
+  const groups=new Map();
+  rows.forEach(r=>{
+    const lat=Number(r.lat),lon=Number(r.lon);
+    const key=`${lat.toFixed(7)},${lon.toFixed(7)}`;
+    if(!groups.has(key))groups.set(key,{lat,lon,items:[]});
+    groups.get(key).items.push(r);
+  });
+  return [...groups.values()];
+}
 
 window.renderMap=function(){
   const target=document.getElementById('mapSurface');
@@ -38,7 +56,13 @@ window.renderMap=function(){
   if(!target||!list)return;
 
   const geocoded=(state.reconectadores||[]).filter(r=>Number.isFinite(Number(r.lat))&&Number.isFinite(Number(r.lon)));
-  list.innerHTML=geocoded.map(r=>`<div class="listRow"><div><strong>${escMap(r.codigo)} · ${escMap(r.ubicacion)}</strong><span class="tiny">${escMap(r.alimentador||'-')}</span></div><div><button class="btn ghost" onclick="showReco(${r.id})">Ficha</button> <button class="btn ghost" onclick="googleRoute(${Number(r.lat)},${Number(r.lon)})">Cómo llegar</button></div></div>`).join('')||'<p class="muted">Aún no hay equipos con una dirección reconocida por el mapa.</p>';
+  const groups=coordinateGroups(geocoded);
+  list.innerHTML=groups.map(g=>{
+    const codes=g.items.map(r=>escMap(r.codigo)).join(', ');
+    const location=escMap(g.items[0]?.ubicacion||'-');
+    const feeders=[...new Set(g.items.map(r=>r.alimentador).filter(Boolean))].map(escMap).join(' · ');
+    return `<div class="listRow"><div><strong>${g.items.length>1?`${g.items.length} equipos · `:''}${codes}</strong><span class="tiny">${location}${feeders?` · ${feeders}`:''}</span></div><div><button class="btn ghost" onclick="googleRoute(${g.lat},${g.lon})">Cómo llegar</button></div></div>`;
+  }).join('')||'<p class="muted">Aún no hay equipos con una dirección reconocida por el mapa.</p>';
 
   if(typeof L==='undefined'){
     target.innerHTML='<div class="map-label">No se pudo iniciar el mapa. Cierra y vuelve a abrir la app.</div>';
@@ -68,11 +92,25 @@ window.renderMap=function(){
   }
 
   const bounds=[];
-  geocoded.forEach(r=>{
-    const lat=Number(r.lat),lon=Number(r.lon),color=markerColor(r.estado);
-    const marker=L.circleMarker([lat,lon],{radius:10,color:'#fff',weight:3,fillColor:color,fillOpacity:1});
-    marker.bindTooltip(escMap(r.codigo),{direction:'top',offset:[0,-8],opacity:.95});
-    marker.bindPopup(`<div class="reco-map-popup"><h4>${escMap(r.codigo)}</h4><p><strong>${escMap(r.estado)}</strong></p><p>${escMap(r.alimentador||'-')}</p><p>${escMap(r.ubicacion||'-')}</p><div class="reco-map-actions"><button class="open" onclick="showReco(${r.id})">Abrir ficha</button><button class="route" onclick="googleRoute(${lat},${lon})">Cómo llegar</button></div></div>`);
+  groups.forEach(g=>{
+    const {lat,lon,items}=g;
+    const color=groupMarkerColor(items);
+    let marker;
+    if(items.length>1){
+      marker=L.marker([lat,lon],{
+        icon:L.divIcon({className:'',html:`<div class="reco-group-marker" style="background:${color}">${items.length}</div>`,iconSize:[30,30],iconAnchor:[15,15]})
+      });
+      marker.bindTooltip(`${items.length} equipos`,{direction:'top',offset:[0,-13],opacity:.95});
+    }else{
+      const r=items[0];
+      marker=L.circleMarker([lat,lon],{radius:10,color:'#fff',weight:3,fillColor:color,fillOpacity:1});
+      marker.bindTooltip(escMap(r.codigo),{direction:'top',offset:[0,-8],opacity:.95});
+    }
+
+    const popupItems=items.map(r=>`<div class="reco-group-item"><strong>${escMap(r.codigo)}</strong><span>${escMap(r.alimentador||'-')} · ${escMap(r.estado||'-')}</span><button onclick="showReco(${r.id})">Abrir ficha</button></div>`).join('');
+    const title=items.length>1?`${items.length} equipos en esta ubicación`:escMap(items[0].codigo);
+    const location=escMap(items[0]?.ubicacion||'-');
+    marker.bindPopup(`<div class="reco-map-popup"><h4>${title}</h4><p>${location}</p><div class="reco-group-list">${popupItems}</div><div class="reco-map-actions"><button class="route" onclick="googleRoute(${lat},${lon})">Cómo llegar</button></div></div>`,{maxWidth:320});
     marker.addTo(recoMarkerLayer);
     bounds.push([lat,lon]);
   });
@@ -102,7 +140,7 @@ function removeLegacyLocationFields(){
   const search=document.getElementById('searchReco');
   if(search)search.placeholder='Buscar alimentador, equipo, ubicación...';
   const mapText=document.querySelector('#mapa .panel:last-child .muted');
-  if(mapText)mapText.textContent='Los equipos aparecerán automáticamente en el mapa según la dirección ingresada en Ubicación.';
+  if(mapText)mapText.textContent='Si varios equipos comparten coordenadas, aparecerán agrupados en un solo punto del mapa.';
 }
 removeLegacyLocationFields();
 
