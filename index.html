@@ -7,24 +7,25 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Reconectadores MT">
-<link rel="manifest" href="manifest.webmanifest?v=32">
+<link rel="manifest" href="manifest.webmanifest?v=34">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>Reconectadores MT · Iquique</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="styles.css?v=32">
+<link rel="stylesheet" href="styles.css?v=34">
 </head>
 <body>
 <header class="topbar">
   <div class="brand"><div class="logo">⚡</div><div><h1>Reconectadores MT</h1><p>Delegación Iquique · Base técnica interactiva</p></div></div>
   <div class="top-actions"><span id="modePill" class="mode-pill"></span><button class="btn ghost-light" onclick="openAccess()">Acceso administrador</button></div>
 </header>
-<nav class="tabs"><button class="tab active" data-view="inicio">Inicio</button><button class="tab" data-view="catalogo">Explorar equipos</button><button class="tab" data-view="mapa">Mapa / ubicación</button><button class="tab adminOnly" data-view="administrar">Administrar</button></nav>
+<nav class="tabs"><button class="tab active" data-view="inicio">Inicio</button><button class="tab" data-view="catalogo">Explorar equipos</button><button class="tab" data-view="mapa">Mapa / ubicación</button><button class="tab" data-view="gestion">Gestión</button><button class="tab adminOnly" data-view="administrar">Administrar</button></nav>
 <main>
 <section id="inicio" class="view active-view"><div class="hero"><div><span class="eyebrow">GESTIÓN DE ACTIVOS MT</span><h2>Todos los reconectadores, en un solo lugar.</h2><p>Consulta rápidamente el estado, alimentador, ubicación, cuadrante, ajustes de protección e historial técnico de cada equipo.</p><div class="hero-buttons"><button class="btn primary" onclick="goView('catalogo')">Explorar reconectadores</button><button class="btn secondary adminOnly" onclick="newReco()">+ Agregar equipo</button></div></div><div class="hero-visual"><div class="pulse-ring"><div class="pulse-core">⚡</div></div><div class="hero-label">Red MT · Iquique</div></div></div><div id="kpis" class="cards"></div><div class="grid2"><div class="panel"><div class="panel-head"><h3>Estado de la flota</h3><span class="muted">Resumen visual</span></div><div id="fleetHealth"></div></div><div class="panel"><div class="panel-head"><h3>Actividad reciente</h3><span class="muted">Últimas inspecciones</span></div><div id="recentActivity"></div></div></div><div class="panel" style="margin-top:16px"><div class="panel-head"><h3>Equipos que requieren atención</h3><span class="muted">Prioridad operativa</span></div><div id="attentionStrip" class="attentionStrip"></div></div></section>
 <section id="catalogo" class="view"><div class="sectionTitle"><div><span class="eyebrow">CATÁLOGO INTERACTIVO</span><h2>Reconectadores</h2></div><button class="btn primary adminOnly" onclick="newReco()">+ Nuevo reconectador</button></div><div class="panel"><div class="filters"><input id="searchReco" placeholder="Buscar alimentador, equipo, ubicación, cuadrante..."><select id="filterStatus"><option value="">Todos los estados</option><option>Operativo</option><option>Con observaciones</option><option>Fuera de servicio</option></select><select id="filterBrand"><option value="">Todos los equipos</option></select></div><div id="recoGrid" class="recoGrid"></div></div></section>
 <section id="mapa" class="view"><div class="sectionTitle"><div><span class="eyebrow">UBICACIÓN GEOGRÁFICA</span><h2>Mapa de reconectadores</h2></div></div><div class="map-layout"><div class="panel map-panel"><div class="map-surface" id="mapSurface"></div></div><div class="panel"><h3>Equipos georreferenciados</h3><p class="muted">Si varios equipos comparten coordenadas, aparecerán agrupados en un solo punto del mapa.</p><div id="mapList"></div></div></div></section>
+<section id="gestion" class="view"><div class="sectionTitle"><div><span class="eyebrow">CONTROL DE GESTIÓN</span><h2>Gestión de activos MT</h2></div></div><div id="gestionContent"></div></section>
 <section id="administrar" class="view"><div class="sectionTitle"><div><span class="eyebrow">SOLO ADMINISTRADOR</span><h2>Administración</h2></div></div><div class="adminGrid"><div class="panel"><h3>Base maestra</h3><p class="muted">Gestiona los datos técnicos de los reconectadores.</p><button class="btn primary" onclick="newReco()">+ Agregar reconectador</button></div><div class="panel"><h3>Respaldo</h3><p class="muted">Descarga una copia completa de la base.</p><button class="btn primary" onclick="downloadBackup()">Descargar respaldo</button></div></div></section>
 </main>
 <dialog id="accessModal" class="modal smallModal"><div class="modalBox"><div class="modalHead"><div><span class="eyebrow">ADMINISTRADOR</span><h3>Acceso de edición</h3></div><button class="x" onclick="closeModal('accessModal')">✕</button></div><p class="muted">Acceso reservado para administración.</p></div></dialog>
@@ -51,7 +52,7 @@
 <button id="installBtn" class="installFab" style="display:none">Instalar app</button><div id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
-<script src="app.js?v=32"></script><script src="admin-login.js?v=32"></script><script src="cuadrante.js?v=32"></script><script src="map-stable.js?v=32"></script><script src="route-planner.js?v=32"></script>
+<script src="app.js?v=34"></script><script src="admin-login.js?v=34"></script><script src="cuadrante.js?v=34"></script><script src="map-stable.js?v=34"></script><script src="route-planner.js?v=34"></script>
 <script>
 function removePickupUI(){
   document.querySelectorAll('#recoForm label').forEach(l=>{if(l.querySelector('[name="pickup"],[name="lat"],[name="lon"]'))l.remove();});
@@ -63,7 +64,7 @@ if("serviceWorker" in navigator){
   let reloading=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloading){reloading=true;location.reload();}});
   window.addEventListener("load",async()=>{
-    const reg=await navigator.serviceWorker.register("service-worker.js?v=32",{updateViaCache:"none"});
+    const reg=await navigator.serviceWorker.register("service-worker.js?v=34",{updateViaCache:"none"});
     try{await reg.update();}catch(_){ }
   });
 }
