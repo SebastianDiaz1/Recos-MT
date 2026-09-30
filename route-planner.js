@@ -5,7 +5,8 @@
   const baseRenderMap=window.renderMap;
 
   function validCoords(r){return Number.isFinite(Number(r?.lat))&&Number.isFinite(Number(r?.lon));}
-  function rows(){return (state.reconectadores||[]).filter(validCoords).filter(r=>!activeQuadrant||String(r.cuadrante||'')===activeQuadrant);}
+  function allGeocoded(){return (state.reconectadores||[]).filter(validCoords);}
+  function rows(){return allGeocoded().filter(r=>!activeQuadrant||String(r.cuadrante||'')===activeQuadrant);}
   function esc(v){return typeof escMap==='function'?escMap(v):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
   function hav(a,b){
     const R=6371,toRad=x=>x*Math.PI/180;
@@ -35,8 +36,8 @@
       .routeToolsTop{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.routeTools label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:800;color:#566276}.routeTools select{min-width:180px;padding:10px;border:1px solid #d9e0e8;border-radius:9px;background:#fff}
       .routeSummary{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0;font-size:12px;font-weight:800;color:#48566a}.routeSummary span{padding:7px 9px;background:#f4f7fa;border-radius:8px}
       .routeList{max-height:230px;overflow:auto;border-top:1px solid #eef1f4;margin-top:8px}.routeItem{display:flex;gap:9px;align-items:flex-start;padding:9px 2px;border-bottom:1px solid #eef1f4}.routeItem input{margin-top:3px}.routeItem strong{font-size:12px}.routeItem small{display:block;color:#6b7687;margin-top:2px}
-      .routeActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.routeActions button:disabled{opacity:.45;cursor:not-allowed}
-      @media(max-width:760px){.routeTools select{min-width:100%;width:100%}.routeToolsTop{display:block}.routeToolsTop label{margin-bottom:9px}}
+      .routeActions,.routeSelectActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.routeActions button:disabled,.routeSelectActions button:disabled{opacity:.45;cursor:not-allowed}
+      @media(max-width:760px){.routeTools select{min-width:100%;width:100%}.routeToolsTop{display:block}.routeToolsTop label{margin-bottom:9px}.routeSelectActions .btn{flex:1 1 100%}}
     `;document.head.appendChild(s);
   }
 
@@ -46,12 +47,13 @@
     if(document.getElementById('routeTools'))return;
     const layout=view.querySelector('.map-layout'); if(!layout)return;
     const box=document.createElement('div');box.id='routeTools';box.className='routeTools';
-    box.innerHTML=`<div class="routeToolsTop"><label>Filtrar mapa por cuadrante<select id="mapQuadrantFilter"><option value="">Todos los cuadrantes</option></select></label></div><div class="routeSummary"><span id="routeVisibleCount">0 equipos visibles</span><span id="routeSelectedCount">0 seleccionados</span><span id="routeDistance">0 km aprox.</span></div><div id="routeList" class="routeList"></div><div class="routeActions"><button id="routeSelectAll" class="btn secondary" type="button">Seleccionar todos</button><button id="routeClear" class="btn ghost" type="button">Limpiar selección</button><button id="routeOpen" class="btn primary" type="button" disabled>Abrir ruta en Google Maps</button></div>`;
+    box.innerHTML=`<div class="routeToolsTop"><label>Filtrar mapa por cuadrante<select id="mapQuadrantFilter"><option value="">Todos los cuadrantes</option></select></label></div><div class="routeSelectActions"><button id="routeSelectAllNetwork" class="btn secondary" type="button">Seleccionar todos los cuadrantes</button><button id="routeSelectQuadrant" class="btn secondary" type="button" disabled>Seleccionar todos del cuadrante</button></div><div class="routeSummary"><span id="routeVisibleCount">0 equipos visibles</span><span id="routeSelectedCount">0 seleccionados</span><span id="routeDistance">0 km aprox.</span></div><div id="routeList" class="routeList"></div><div class="routeActions"><button id="routeClear" class="btn ghost" type="button">Limpiar selección</button><button id="routeOpen" class="btn primary" type="button" disabled>Abrir ruta en Google Maps</button></div>`;
     layout.parentNode.insertBefore(box,layout);
     const q=document.getElementById('mapQuadrantFilter');
     getQuadrants().forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=`Cuadrante ${v}`;q.appendChild(o);});
-    q.addEventListener('change',()=>{activeQuadrant=q.value;selected.clear();renderFilteredMap();renderPlanner();});
-    document.getElementById('routeSelectAll').addEventListener('click',()=>{rows().forEach(r=>selected.add(r.id));renderPlanner();});
+    q.addEventListener('change',()=>{activeQuadrant=q.value;renderFilteredMap();renderPlanner();});
+    document.getElementById('routeSelectAllNetwork').addEventListener('click',()=>{allGeocoded().forEach(r=>selected.add(r.id));renderPlanner();});
+    document.getElementById('routeSelectQuadrant').addEventListener('click',()=>{if(!activeQuadrant)return;rows().forEach(r=>selected.add(r.id));renderPlanner();});
     document.getElementById('routeClear').addEventListener('click',()=>{selected.clear();renderPlanner();});
     document.getElementById('routeOpen').addEventListener('click',openRoute);
   }
@@ -67,14 +69,26 @@
   function renderPlanner(){
     ensureUI();
     const arr=rows();
-    [...selected].forEach(id=>{if(!arr.some(r=>r.id===id))selected.delete(id);});
+    const validIds=new Set(allGeocoded().map(r=>r.id));
+    [...selected].forEach(id=>{if(!validIds.has(id))selected.delete(id);});
     const list=document.getElementById('routeList'); if(!list)return;
     list.innerHTML=arr.map(r=>`<label class="routeItem"><input type="checkbox" data-route-id="${r.id}" ${selected.has(r.id)?'checked':''}><span><strong>${esc(r.codigo)}</strong><small>${esc(r.alimentador||'-')}${r.cuadrante?` · Cuadrante ${esc(r.cuadrante)}`:''}</small></span></label>`).join('')||'<p class="muted">No hay equipos georreferenciados para este cuadrante.</p>';
-    list.querySelectorAll('[data-route-id]').forEach(c=>c.addEventListener('change',()=>{const id=Number(c.dataset.routeId);c.checked?selected.add(id):selected.delete(id);updateSummary();}));
+    list.querySelectorAll('[data-route-id]').forEach(c=>c.addEventListener('change',()=>{const id=Number(c.dataset.routeId);c.checked?selected.add(id):selected.delete(id);updateSummary();updateSelectButtons();}));
     document.getElementById('routeVisibleCount').textContent=`${arr.length} ${arr.length===1?'equipo visible':'equipos visibles'}`;
-    const selectAll=document.getElementById('routeSelectAll');
-    if(selectAll){const allSelected=arr.length>0&&arr.every(r=>selected.has(r.id));selectAll.textContent=allSelected?'Todos seleccionados':'Seleccionar todos';selectAll.disabled=arr.length===0||allSelected;}
+    updateSelectButtons();
     updateSummary();
+  }
+
+  function updateSelectButtons(){
+    const all=allGeocoded();
+    const current=rows();
+    const allBtn=document.getElementById('routeSelectAllNetwork');
+    const qBtn=document.getElementById('routeSelectQuadrant');
+    if(allBtn){const done=all.length>0&&all.every(r=>selected.has(r.id));allBtn.textContent=done?'Todos los cuadrantes seleccionados':'Seleccionar todos los cuadrantes';allBtn.disabled=all.length===0||done;}
+    if(qBtn){
+      if(!activeQuadrant){qBtn.textContent='Seleccionar todos del cuadrante';qBtn.disabled=true;}
+      else{const done=current.length>0&&current.every(r=>selected.has(r.id));qBtn.textContent=done?`Cuadrante ${activeQuadrant} seleccionado`:`Seleccionar todos del cuadrante ${activeQuadrant}`;qBtn.disabled=current.length===0||done;}
+    }
   }
 
   function selectedRows(){const all=state.reconectadores||[];return [...selected].map(id=>all.find(r=>r.id===id)).filter(validCoords);}
