@@ -1,3 +1,16 @@
+// Porcentajes visibles sobre el gráfico Estado de la flota.
+(function(){
+  if(typeof Chart==='undefined')return;
+  const plugin={id:'statusPercentageLabels',afterDatasetsDraw(chart){
+    if(chart.canvas?.id!=='gStatusChart')return;
+    const ds=chart.data?.datasets?.[0],meta=chart.getDatasetMeta(0);if(!ds||!meta)return;
+    const vals=(ds.data||[]).map(v=>Number(v)||0),total=vals.reduce((a,b)=>a+b,0);if(!total)return;
+    const ctx=chart.ctx;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='700 13px Inter, Segoe UI, Arial, sans-serif';ctx.fillStyle='#fff';ctx.shadowColor='rgba(0,0,0,.35)';ctx.shadowBlur=3;
+    meta.data.forEach((arc,i)=>{const v=vals[i];if(!v)return;const angle=Math.abs((arc.endAngle||0)-(arc.startAngle||0));if(angle<0.16)return;const p=arc.tooltipPosition(),pc=v*100/total;ctx.fillText((pc<10?pc.toFixed(1):Math.round(pc))+'%',p.x,p.y);});ctx.restore();
+  }};
+  try{Chart.register(plugin);}catch(_){ }
+})();
+
 // Informe PDF espejo de la pestaña Gestión.
 (function(){
   const pct=(n,d)=>d?Math.round(n*100/d):0;
@@ -18,7 +31,6 @@
   function chartBox(doc,id,title,x,y,w,h){const img=chartImg(id);if(!img)return false;doc.setFillColor(255);doc.setDrawColor(225,230,236);doc.roundedRect(x,y,w,h,3,3,'FD');doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(35,50,70);doc.text(title,x+5,y+7);doc.addImage(img,'PNG',x+4,y+11,w-8,h-15,'','FAST');return true;}
   function kpi(doc,label,value,sub,x,y,w=42,h=20){doc.setFillColor(255);doc.setDrawColor(225,230,236);doc.roundedRect(x,y,w,h,3,3,'FD');doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(115,125,140);doc.text(label.toUpperCase(),x+4,y+5);doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(24,37,57);doc.text(String(value),x+4,y+12.5);doc.setFont('helvetica','normal');doc.setFontSize(6.2);doc.setTextColor(115,125,140);doc.text(String(sub||''),x+4,y+17);}
   async function build(){if(!window.jspdf?.jsPDF)throw new Error('No se pudo cargar el generador PDF.');const {jsPDF}=window.jspdf,doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});if(typeof doc.autoTable!=='function')throw new Error('No se pudo cargar el módulo de tablas PDF.');const rs=rows(),s=stats(rs),t=stamp(),filter=filterLabel(),qs=qSummary(rs),gs=gestores(rs),pend=pending(rs);
-    // Página 1: igual al bloque superior de Gestión.
     header(doc,'Gestión de activos MT',`Control de Gestión · ${t.date} ${t.time} · ${filter}`);
     doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(35,50,70);doc.text('Indicadores de gestión',14,38);
     const cards=[['Equipos en vista',s.total,filter==='Vista general de la flota'?'Base completa':'Resultado filtrado'],['Disponibilidad',pct(s.oper,s.total)+'%',s.oper+' operativos'],['Requieren atención',s.obs+s.fuera,`${s.obs} observados · ${s.fuera} fuera`],['Georreferenciación',pct(s.geo,s.total)+'%',s.geo+' con coordenadas'],['Fecha verificación',pct(s.verif,s.total)+'%',s.verif+' con fecha registrada'],['Inspecciones del mes',s.monthIns,'Sobre equipos visibles'],['Observaciones',s.obs,'Estado actual'],['Fuera de servicio',s.fuera,'Atención prioritaria']];
@@ -26,13 +38,11 @@
     chartBox(doc,'gStatusChart','Estado de la flota',14,100,86,72);chartBox(doc,'gQuadrantChart','Equipos por cuadrante',110,100,86,72);
     doc.setFont('helvetica','bold');doc.setFontSize(9);doc.text('Resumen por cuadrante',14,184);
     doc.autoTable({startY:188,head:[['Cuadrante','Gestor','Total','Operativos','Atención','Disp.']],body:qs,theme:'striped',styles:{fontSize:7,cellPadding:2,textColor:[50,62,78]},headStyles:{fillColor:[23,76,128],textColor:255},columnStyles:{0:{cellWidth:24},1:{cellWidth:50},2:{halign:'center'},3:{halign:'center'},4:{halign:'center'},5:{halign:'center'}},margin:{left:14,right:14,bottom:16}});
-    // Página 2: mismos gráficos restantes.
     doc.addPage();header(doc,'Análisis visual de Gestión','Actividad, referencias y calidad de información');
     chartBox(doc,'gInspectionChart','Actividad de inspecciones · últimos 6 meses',14,38,182,70);
     chartBox(doc,'gBrandChart','Equipos por referencia',14,119,86,72);chartBox(doc,'gDataChart','Calidad de información',110,119,86,72);
     doc.setFont('helvetica','bold');doc.setFontSize(9);doc.text('Gestores por cuadrante',14,204);
     const x0=14,y0=210,w=56,h=22;gs.forEach((g,i)=>{const col=i%3,row=Math.floor(i/3),x=x0+col*61,y=y0+row*27;doc.setFillColor(248,250,252);doc.setDrawColor(230,234,239);doc.roundedRect(x,y,w,h,2,2,'FD');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(35,50,70);doc.text('Cuadrante '+g.q,x+4,y+6);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(82,97,116);const name=[...g.gs].join(' / ')||'Sin gestor asignado';doc.text(doc.splitTextToSize(name,w-8),x+4,y+12);doc.setFontSize(6.5);doc.text(`${g.n} equipos`,x+4,y+h-3);});
-    // Página 3: mismo bloque inferior de Gestión.
     doc.addPage();header(doc,'Pendientes de Gestión',`${pend.length} detectados en la vista actual · priorización operacional`);
     if(pend.length){doc.autoTable({startY:36,head:[['Equipo','Alimentador','Estado / motivo','Cuadrante','Gestor','Verificación','Observaciones']],body:pend.map(r=>[r.codigo||'-',r.alimentador||'-',why(r),r.cuadrante||'-',r.gestor_cuadrante||'-',fmt(r.fecha_verificacion),r.observaciones||'-']),theme:'grid',styles:{fontSize:7,cellPadding:2,valign:'top',overflow:'linebreak',textColor:[48,60,76]},headStyles:{fillColor:[15,39,69],textColor:255},columnStyles:{0:{cellWidth:23},1:{cellWidth:28},2:{cellWidth:30},3:{cellWidth:17},4:{cellWidth:30},5:{cellWidth:23},6:{cellWidth:35}},margin:{left:8,right:8,bottom:18}});}else{doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(85,98,115);doc.text('No hay pendientes para este filtro.',14,42);}
     footer(doc);return {doc,filename:`Gestion_Reconectadores_MT_${t.file}.pdf`};
