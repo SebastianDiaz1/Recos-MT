@@ -46,11 +46,12 @@
     if(document.getElementById('routeTools'))return;
     const layout=view.querySelector('.map-layout'); if(!layout)return;
     const box=document.createElement('div');box.id='routeTools';box.className='routeTools';
-    box.innerHTML=`<div class="routeToolsTop"><label>Filtrar mapa por cuadrante<select id="mapQuadrantFilter"><option value="">Todos los cuadrantes</option></select></label></div><div class="routeSummary"><span id="routeVisibleCount">0 equipos visibles</span><span id="routeSelectedCount">0 seleccionados</span><span id="routeDistance">0 km aprox.</span></div><div id="routeList" class="routeList"></div><div class="routeActions"><button id="routeClear" class="btn ghost" type="button">Limpiar selección</button><button id="routeOpen" class="btn primary" type="button" disabled>Abrir ruta en Google Maps</button></div>`;
+    box.innerHTML=`<div class="routeToolsTop"><label>Filtrar mapa por cuadrante<select id="mapQuadrantFilter"><option value="">Todos los cuadrantes</option></select></label></div><div class="routeSummary"><span id="routeVisibleCount">0 equipos visibles</span><span id="routeSelectedCount">0 seleccionados</span><span id="routeDistance">0 km aprox.</span></div><div id="routeList" class="routeList"></div><div class="routeActions"><button id="routeSelectAll" class="btn secondary" type="button">Seleccionar todos</button><button id="routeClear" class="btn ghost" type="button">Limpiar selección</button><button id="routeOpen" class="btn primary" type="button" disabled>Abrir ruta en Google Maps</button></div>`;
     layout.parentNode.insertBefore(box,layout);
     const q=document.getElementById('mapQuadrantFilter');
     getQuadrants().forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=`Cuadrante ${v}`;q.appendChild(o);});
     q.addEventListener('change',()=>{activeQuadrant=q.value;selected.clear();renderFilteredMap();renderPlanner();});
+    document.getElementById('routeSelectAll').addEventListener('click',()=>{rows().forEach(r=>selected.add(r.id));renderPlanner();});
     document.getElementById('routeClear').addEventListener('click',()=>{selected.clear();renderPlanner();});
     document.getElementById('routeOpen').addEventListener('click',openRoute);
   }
@@ -71,6 +72,8 @@
     list.innerHTML=arr.map(r=>`<label class="routeItem"><input type="checkbox" data-route-id="${r.id}" ${selected.has(r.id)?'checked':''}><span><strong>${esc(r.codigo)}</strong><small>${esc(r.alimentador||'-')}${r.cuadrante?` · Cuadrante ${esc(r.cuadrante)}`:''}</small></span></label>`).join('')||'<p class="muted">No hay equipos georreferenciados para este cuadrante.</p>';
     list.querySelectorAll('[data-route-id]').forEach(c=>c.addEventListener('change',()=>{const id=Number(c.dataset.routeId);c.checked?selected.add(id):selected.delete(id);updateSummary();}));
     document.getElementById('routeVisibleCount').textContent=`${arr.length} ${arr.length===1?'equipo visible':'equipos visibles'}`;
+    const selectAll=document.getElementById('routeSelectAll');
+    if(selectAll){const allSelected=arr.length>0&&arr.every(r=>selected.has(r.id));selectAll.textContent=allSelected?'Todos seleccionados':'Seleccionar todos';selectAll.disabled=arr.length===0||allSelected;}
     updateSummary();
   }
 
