@@ -144,3 +144,16 @@
   if(g)new MutationObserver(()=>setTimeout(ensureGestionBar,0)).observe(g,{childList:true});
   setTimeout(()=>{ensureClock();ensureGestionBar();},1000);
 })();
+
+// Carga diferida del generador de informe PDF para no afectar el arranque de la app.
+(function(){
+  function load(src,id){return new Promise((resolve,reject)=>{if(id&&document.getElementById(id)){resolve();return;}const s=document.createElement('script');if(id)s.id=id;s.src=src;s.onload=resolve;s.onerror=reject;document.head.appendChild(s);});}
+  async function boot(){
+    try{
+      await load('https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js','jspdfLib');
+      await load('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js','jspdfAutoTableLib');
+      await load('gestion-pdf.js?v=38','gestionPdfModule');
+    }catch(err){console.error('No se pudo cargar el módulo PDF de Gestión',err);}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
