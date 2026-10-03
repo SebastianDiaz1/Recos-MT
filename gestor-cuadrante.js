@@ -105,3 +105,9 @@
   const g=document.getElementById('gestionContent');if(g)obs.observe(g,{childList:true,subtree:true});
   setTimeout(()=>{addGestorForm();addGestorFilter();populateGestores();try{renderCatalogWithGestor()}catch(_){};enrichGestion();},600);
 })();
+
+// Carga la biblioteca técnica de Manuales sin alterar la navegación existente.
+(function(){
+  if(document.querySelector('script[data-manuales-loader]'))return;
+  const s=document.createElement('script');s.src='manuales.js?v=41';s.async=false;s.dataset.manualesLoader='1';document.body.appendChild(s);
+})();
