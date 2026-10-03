@@ -1,39 +1,35 @@
 // Pestaña Manuales: biblioteca técnica de documentos asociados a la flota.
 (function(){
   const MANUALES=[
-    {
-      titulo:'MiCOM P145 – Manual técnico',
-      fabricante:'Schneider Electric',
-      equipo:'MiCOM P141 / P142 / P143 / P144 / P145',
-      referencia:'P14x/ES M/C74',
-      detalle:'Relés de protección de circuito · Versión software 35 · Sufijo de hardware J',
-      paginas:'640 páginas',
-      fuente:'Schneider Electric',
-      url:'https://www.se.com/cl/es/download/document/P14x_ES_M_C74/'
-    },
-    {
-      titulo:'NOJA Power RC01 – Manual de usuario',
-      fabricante:'NOJA Power',
-      equipo:'OSM 15/27 kV · Control RC01ES',
-      referencia:'NOJA-533-09',
-      detalle:'Reconectador automático OSM · Series 079 / 200 · Control RC01ES',
-      paginas:'125 páginas',
-      fuente:'Copia pública del documento NOJA-533-09',
-      url:'https://pdfcoffee.com/noja-533-09-manual-pdf-free.html'
-    },
-    {
-      titulo:'NOJA Power RC10 – Manual de usuario',
-      fabricante:'NOJA Power',
-      equipo:'OSM 15/27/38 kV · Cubículo de Control RC',
-      referencia:'NOJA-5009-11',
-      detalle:'Series OSM 300 / 310 / 312 · Manual de usuario del cubículo RC',
-      paginas:'243 páginas',
-      fuente:'Copia pública del documento NOJA-5009-11',
-      url:'https://es.scribd.com/document/489848868/12683-NOJA-Manual-Reconectador-SP'
-    }
+    {titulo:'MiCOM P145 – Manual técnico',fabricante:'Schneider Electric',equipo:'MiCOM P141 / P142 / P143 / P144 / P145',referencia:'P14x/ES M/C74',detalle:'Relés de protección de circuito · Versión software 35 · Sufijo de hardware J',paginas:'640 páginas',fuente:'Schneider Electric',url:'https://www.se.com/cl/es/download/document/P14x_ES_M_C74/'},
+    {titulo:'NOJA Power RC01 – Manual de usuario',fabricante:'NOJA Power',equipo:'OSM 15/27 kV · Control RC01ES',referencia:'NOJA-533-09',detalle:'Reconectador automático OSM · Series 079 / 200 · Control RC01ES',paginas:'125 páginas',fuente:'Documento NOJA-533-09',url:'https://pdfcoffee.com/noja-533-09-manual-pdf-free.html'},
+    {titulo:'NOJA Power RC10 – Manual de usuario',fabricante:'NOJA Power',equipo:'OSM 15/27/38 kV · Cubículo de Control RC',referencia:'NOJA-5009-11',detalle:'Series OSM 300 / 310 / 312 · Manual de usuario del cubículo RC',paginas:'243 páginas',fuente:'Documento NOJA-5009-11',url:'https://es.scribd.com/document/489848868/12683-NOJA-Manual-Reconectador-SP'}
   ];
 
-  function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+  function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[m]));}
+
+  function ensureStructure(){
+    const nav=document.querySelector('.tabs');
+    if(nav&&!nav.querySelector('[data-view="manuales"]')){
+      const btn=document.createElement('button');btn.className='tab';btn.dataset.view='manuales';btn.textContent='Manuales';
+      const admin=nav.querySelector('[data-view="administrar"]');if(admin)nav.insertBefore(btn,admin);else nav.appendChild(btn);
+      btn.addEventListener('click',()=>openManuales(btn));
+    }
+    const main=document.querySelector('main');
+    if(main&&!document.getElementById('manuales')){
+      const section=document.createElement('section');section.id='manuales';section.className='view';
+      section.innerHTML='<div class="sectionTitle"><div><span class="eyebrow">BIBLIOTECA TÉCNICA</span><h2>Manuales</h2></div></div><div id="manualesContent"></div>';
+      const admin=document.getElementById('administrar');if(admin)main.insertBefore(section,admin);else main.appendChild(section);
+    }
+  }
+
+  function openManuales(btn){
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    (btn||document.querySelector('[data-view="manuales"]'))?.classList.add('active');
+    document.querySelectorAll('.view').forEach(x=>x.classList.remove('active-view'));
+    document.getElementById('manuales')?.classList.add('active-view');
+    render();
+  }
 
   function ensureStyles(){
     if(document.getElementById('manualesStyles'))return;
@@ -51,27 +47,16 @@
   }
 
   function render(){
-    ensureStyles();
+    ensureStructure();ensureStyles();
     const host=document.getElementById('manualesContent');if(!host)return;
     const q=(document.getElementById('manualSearch')?.value||'').toLowerCase().trim();
     const arr=MANUALES.filter(m=>Object.values(m).join(' ').toLowerCase().includes(q));
-    host.innerHTML=`
-      <div class="manualToolbar"><input id="manualSearch" placeholder="Buscar manual, fabricante, modelo o referencia..." value="${esc(q)}"></div>
-      <div class="manualGrid">${arr.map(m=>`<article class="manualCard">
-        <div class="manualTop"><div class="manualIcon">📘</div><div><h3>${esc(m.titulo)}</h3><p>${esc(m.detalle)}</p></div></div>
-        <div class="manualMeta">
-          <div><span>Fabricante</span><strong>${esc(m.fabricante)}</strong></div>
-          <div><span>Referencia</span><strong>${esc(m.referencia)}</strong></div>
-          <div><span>Aplicación</span><strong>${esc(m.equipo)}</strong></div>
-          <div><span>Extensión</span><strong>${esc(m.paginas)}</strong></div>
-        </div>
-        <div class="manualActions"><a class="btn primary" href="${esc(m.url)}" target="_blank" rel="noopener">Abrir manual</a></div>
-      </article>`).join('')||'<p class="muted">No hay manuales que coincidan con la búsqueda.</p>'}</div>
-      <div class="manualNotice">Biblioteca técnica inicial cargada con los tres documentos entregados: MiCOM P145, NOJA Power RC01 y NOJA Power RC10.</div>`;
+    host.innerHTML=`<div class="manualToolbar"><input id="manualSearch" placeholder="Buscar manual, fabricante, modelo o referencia..." value="${esc(q)}"></div><div class="manualGrid">${arr.map(m=>`<article class="manualCard"><div class="manualTop"><div class="manualIcon">📘</div><div><h3>${esc(m.titulo)}</h3><p>${esc(m.detalle)}</p></div></div><div class="manualMeta"><div><span>Fabricante</span><strong>${esc(m.fabricante)}</strong></div><div><span>Referencia</span><strong>${esc(m.referencia)}</strong></div><div><span>Aplicación</span><strong>${esc(m.equipo)}</strong></div><div><span>Extensión</span><strong>${esc(m.paginas)}</strong></div></div><div class="manualActions"><a class="btn primary" href="${esc(m.url)}" target="_blank" rel="noopener">Abrir manual</a></div></article>`).join('')||'<p class="muted">No hay manuales que coincidan con la búsqueda.</p>'}</div><div class="manualNotice">Biblioteca técnica inicial con MiCOM P145, NOJA Power RC01 y NOJA Power RC10.</div>`;
     document.getElementById('manualSearch')?.addEventListener('input',render);
   }
 
+  ensureStructure();ensureStyles();
   window.renderManuales=render;
-  document.addEventListener('click',e=>{if(e.target.closest('[data-view="manuales"]'))setTimeout(render,50);});
-  setTimeout(render,900);
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-view="manuales"]');if(b){e.preventDefault();e.stopPropagation();openManuales(b);}} ,true);
+  setTimeout(()=>{ensureStructure();render();},700);
 })();
