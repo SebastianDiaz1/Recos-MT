@@ -12,13 +12,30 @@ async function refreshSession(){
  if(error||data!==true){adminPassword="";sessionStorage.removeItem("reco_admin_password");sb=makeClient();state.session={name:"Consulta",role:"viewer"};return;}
  state.session={name:"Sebastián Díaz",role:"admin"};
 }
+let loadRetryTimer=null;
+function showDataLoadError(msg="No fue posible cargar los datos. Reintentando..."){
+  const k=document.getElementById("kpis");
+  const g=document.getElementById("recoGrid");
+  if(k)k.innerHTML=`<div class="card" style="grid-column:1/-1"><div class="icon">⚠️</div><div class="label">Conexión de datos</div><div class="value" style="font-size:16px">${msg}</div></div>`;
+  if(g)g.innerHTML=`<div class="panel" style="padding:14px"><strong>No se pudieron cargar los equipos.</strong><p class="muted">La base no se ha borrado. La aplicación intentará conectarse nuevamente.</p><button class="btn primary" type="button" onclick="loadData(true)">Reintentar ahora</button></div>`;
+}
 async function loadData(showToast=false){
- const [{data:r,error:er},{data:i,error:ei}]=await Promise.all([
-   sb.from('reconectadores').select('*').order('codigo'),
-   sb.from('inspecciones').select('*').order('fecha',{ascending:false})
- ]);
- if(er||ei){console.error(er||ei);if(showToast)toast("No se pudo actualizar la base online");return;}
- state.reconectadores=r||[];state.inspecciones=i||[];renderAll();if(showToast)toast("Información actualizada");
+ try{
+   const [{data:r,error:er},{data:i,error:ei}]=await Promise.all([
+     sb.from('reconectadores').select('*').order('codigo'),
+     sb.from('inspecciones').select('*').order('fecha',{ascending:false})
+   ]);
+   if(er||ei)throw(er||ei);
+   state.reconectadores=r||[];state.inspecciones=i||[];
+   if(loadRetryTimer){clearTimeout(loadRetryTimer);loadRetryTimer=null;}
+   renderAll();
+   if(showToast)toast("Información actualizada");
+ }catch(err){
+   console.error("Error cargando Supabase:",err);
+   showDataLoadError();
+   if(showToast)toast("Problema de conexión. Reintentando...");
+   if(!loadRetryTimer)loadRetryTimer=setTimeout(()=>{loadRetryTimer=null;loadData(false)},3000);
+ }
 }
 function isAdmin(){return state.session.role==="admin"}
 function toast(m){let t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
