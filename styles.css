@@ -94,3 +94,13 @@ body[data-theme="dark"] .manualMeta div,body[data-theme="dark"] .manualNotice{ba
   .topbar{position:relative}.topbar p{display:block;font-size:10px}.visualStatusChip.subtle{display:none}
   .top-actions{align-self:flex-start}.top-actions .ghost-light:not(.themeToggleV43){font-size:0;width:38px;padding:8px}.top-actions .ghost-light:not(.themeToggleV43):after{content:"🔐";font-size:16px}
 }
+
+.refreshPageV45{display:inline-flex;align-items:center;gap:7px}
+.refreshPageV45 .refreshIconV45{font-size:18px;line-height:1}
+.refreshPageV45.isRefreshing .refreshIconV45{animation:spinV45 .7s linear infinite}
+.refreshPageV45:disabled{opacity:.7;cursor:wait}
+@keyframes spinV45{to{transform:rotate(360deg)}}
+@media(max-width:760px){
+  .refreshPageV45{width:38px;padding:8px;justify-content:center}
+  .refreshPageV45 .refreshTextV45{display:none}
+}
