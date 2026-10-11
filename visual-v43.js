@@ -13,6 +13,24 @@
       brandText.appendChild(row);
     }
     const actions=document.querySelector('.top-actions');
+    if(actions&&!document.getElementById('refreshPageV45')){
+      const r=document.createElement('button');
+      r.id='refreshPageV45';r.className='btn ghost-light refreshPageV45';r.type='button';
+      r.title='Actualizar página';r.innerHTML='<span class="refreshIconV45">↻</span><span class="refreshTextV45">Actualizar</span>';
+      r.addEventListener('click',async()=>{
+        r.disabled=true;r.classList.add('isRefreshing');
+        try{
+          if('serviceWorker' in navigator){
+            const reg=await navigator.serviceWorker.getRegistration();
+            if(reg)await reg.update();
+          }
+        }catch(_){}
+        const url=new URL(window.location.href);
+        url.searchParams.set('refresh',Date.now().toString());
+        window.location.replace(url.toString());
+      });
+      actions.insertBefore(r,actions.lastElementChild);
+    }
     if(actions&&!document.getElementById('themeToggleV43')){
       const b=document.createElement('button');b.id='themeToggleV43';b.className='btn ghost-light themeToggleV43';b.type='button';b.title='Cambiar tema';actions.insertBefore(b,actions.lastElementChild);
       b.addEventListener('click',()=>applyTheme(document.body.dataset.theme==='dark'?'light':'dark'));
