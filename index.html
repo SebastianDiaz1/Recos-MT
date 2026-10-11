@@ -7,13 +7,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Reconectadores MT">
-<link rel="manifest" href="manifest.webmanifest?v=44">
+<link rel="manifest" href="manifest.webmanifest?v=45">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>Reconectadores MT · Iquique</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="styles.css?v=44">
+<link rel="stylesheet" href="styles.css?v=45">
 </head>
 <body>
 <header class="topbar"><div class="brand"><div class="logo">⚡</div><div><h1>Reconectadores MT</h1><p>Delegación Iquique · Base técnica interactiva</p></div></div><div class="top-actions"><span id="modePill" class="mode-pill"></span><button class="btn ghost-light" onclick="openAccess()">Acceso administrador</button></div></header>
@@ -36,11 +36,11 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
-<script src="app.js?v=44"></script><script src="status-percent.js?v=44"></script><script src="admin-login.js?v=44"></script><script src="cuadrante.js?v=44"></script><script src="map-stable.js?v=44"></script><script src="route-planner.js?v=44"></script><script src="gestion-interactiva.js?v=44"></script><script src="gestor-cuadrante.js?v=44"></script><script src="comunicacion-remota.js?v=44"></script><script src="respaldo-gestion.js?v=44"></script><script src="gestion-pdf.js?v=44"></script><script src="manuales.js?v=44"></script><script src="visual-v43.js?v=44"></script>
+<script src="app.js?v=45"></script><script src="status-percent.js?v=45"></script><script src="admin-login.js?v=45"></script><script src="cuadrante.js?v=45"></script><script src="map-stable.js?v=45"></script><script src="route-planner.js?v=45"></script><script src="gestion-interactiva.js?v=45"></script><script src="gestor-cuadrante.js?v=45"></script><script src="comunicacion-remota.js?v=45"></script><script src="respaldo-gestion.js?v=45"></script><script src="gestion-pdf.js?v=45"></script><script src="manuales.js?v=45"></script><script src="visual-v43.js?v=45"></script>
 <script>
 function removePickupUI(){document.querySelectorAll('#recoForm label').forEach(l=>{if(l.querySelector('[name="pickup"],[name="lat"],[name="lon"]'))l.remove();});document.querySelectorAll('.metaBox,.stat').forEach(el=>{const s=el.querySelector('span');if(s&&['pickup','latitud','longitud'].includes(s.textContent.trim().toLowerCase()))el.remove();});const search=document.getElementById('searchReco');if(search)search.placeholder='Buscar alimentador, equipo, ubicación, cuadrante, gestor...';}
 const pickupObserver=new MutationObserver(removePickupUI);pickupObserver.observe(document.body,{childList:true,subtree:true});removePickupUI();
-if("serviceWorker" in navigator){let reloading=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloading){reloading=true;location.reload();}});window.addEventListener("load",async()=>{const reg=await navigator.serviceWorker.register("service-worker.js?v=44",{updateViaCache:"none"});try{await reg.update();}catch(_){}});}
+if("serviceWorker" in navigator){let reloading=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloading){reloading=true;location.reload();}});window.addEventListener("load",async()=>{const reg=await navigator.serviceWorker.register("service-worker.js?v=45",{updateViaCache:"none"});try{await reg.update();}catch(_){}});}
 let deferredPrompt;window.addEventListener("beforeinstallprompt",(e)=>{e.preventDefault();deferredPrompt=e;document.getElementById("installBtn").style.display="block";});document.getElementById("installBtn").addEventListener("click",async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;document.getElementById("installBtn").style.display="none";});window.addEventListener("appinstalled",()=>document.getElementById("installBtn").style.display="none");
 </script>
 </body>
