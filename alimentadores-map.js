@@ -38,34 +38,25 @@
   function ensureUI(){
     ensureStyles();
     const view=document.getElementById('mapa');if(!view)return;
-    if(document.getElementById('feederTools'))return;
-    const layout=view.querySelector('.map-layout');if(!layout)return;
-    const box=document.createElement('div');box.id='feederTools';box.className='feederTools';
-    box.innerHTML=`
-      <div class="feederToolsTop">
-        <label>Alimentador MT
-          <select id="feederSelect"><option value="">Todos los alimentadores</option></select>
-        </label>
-        <button id="feederToggle" class="btn secondary feederToggle active" type="button">⚡ Mostrar alimentadores</button>
-        <button id="feederFit" class="btn ghost" type="button">Centrar selección</button>
-      </div>
-      <div class="feederStatus">
-        <span id="feederCount">0 alimentadores</span>
-        <span id="feederRecoCount">0 reconectadores asociados</span>
-        <span id="feederGeometryCount">0 trazados georreferenciados</span>
-      </div>
-      <div id="feederNotice" class="feederNotice">La capa está preparada para recibir los trazados reales en formato GeoJSON. Mientras tanto, al seleccionar un alimentador se resaltan sus reconectadores conocidos sin inventar el recorrido de la línea MT.</div>`;
-    layout.parentNode.insertBefore(box,layout);
+    let box=document.getElementById('feederTools');
+    if(!box){
+      const layout=view.querySelector('.map-layout');if(!layout)return;
+      box=document.createElement('div');box.id='feederTools';box.className='feederTools feederToolsVisible';
+      box.innerHTML='<div class="feederToolsTop"><label>Alimentador MT<select id="feederSelect"><option value="">Todos los alimentadores</option></select></label><button id="feederToggle" class="btn primary feederToggle active" type="button">⚡ Capa activa</button><button id="feederFit" class="btn ghost" type="button">◎ Centrar selección</button></div><div class="feederStatus"><span id="feederCount">0 alimentadores</span><span id="feederRecoCount">0 reconectadores asociados</span><span id="feederGeometryCount">0 trazados georreferenciados</span></div><div id="feederNotice" class="feederNotice feederNoticeStrong"></div>';
+      layout.parentNode.insertBefore(box,layout);
+    }
+    if(box.dataset.bound==='1'){populateSelect();return;}
+    box.dataset.bound='1';
     populateSelect();
-    document.getElementById('feederSelect').addEventListener('change',e=>{selectedFeeder=e.target.value;renderFeederLayer();});
-    document.getElementById('feederToggle').addEventListener('click',()=>{
+    document.getElementById('feederSelect')?.addEventListener('change',e=>{selectedFeeder=e.target.value;renderFeederLayer();});
+    document.getElementById('feederToggle')?.addEventListener('click',()=>{
       visible=!visible;
       const b=document.getElementById('feederToggle');
       b.classList.toggle('active',visible);
-      b.textContent=visible?'⚡ Mostrar alimentadores':'⚡ Alimentadores ocultos';
+      b.textContent=visible?'⚡ Capa activa':'⚡ Capa oculta';
       renderFeederLayer();
     });
-    document.getElementById('feederFit').addEventListener('click',fitSelected);
+    document.getElementById('feederFit')?.addEventListener('click',fitSelected);
   }
 
   function populateSelect(){
@@ -79,7 +70,7 @@
 
   async function loadGeoJSON(){
     try{
-      const r=await fetch('alimentadores.geojson?v=46',{cache:'no-store'});
+      const r=await fetch('alimentadores.geojson?v=47',{cache:'no-store'});
       if(!r.ok)throw new Error('No se pudo cargar alimentadores.geojson');
       const j=await r.json();
       feederData=(j&&j.type==='FeatureCollection')?j:{type:'FeatureCollection',features:[]};
