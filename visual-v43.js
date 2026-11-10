@@ -155,11 +155,11 @@
     addHeader();decorateTabs();buildMobileNav();improveHero();improveSections();improveFilters();
     applyTheme(localStorage.getItem(THEME_KEY)||localStorage.getItem('reco_mt_theme_v43')||'light');
     updateStatus();
-    const obs=new MutationObserver(()=>{syncMobileNav();enhanceCards();});
-    obs.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
     window.addEventListener('online',updateStatus);window.addEventListener('offline',updateStatus);
-    document.addEventListener('click',e=>{if(e.target.closest('.tab,.mobileNavBtn'))setTimeout(syncMobileNav,20);});
-    setInterval(updateStatus,1500);
+    document.addEventListener('click',e=>{if(e.target.closest('.tab,.mobileNavBtn'))setTimeout(()=>{syncMobileNav();enhanceCards();},30);});
+    document.addEventListener('input',e=>{if(e.target.closest('#catalogo'))setTimeout(enhanceCards,30);});
+    document.addEventListener('change',e=>{if(e.target.closest('#catalogo'))setTimeout(enhanceCards,30);});
+    setInterval(()=>{updateStatus();syncMobileNav();},5000);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
