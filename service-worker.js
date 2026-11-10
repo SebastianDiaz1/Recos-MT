@@ -1,5 +1,5 @@
-const CACHE="reco-mt-v49-ux";
-const CORE=["./","./index.html?v=49","./styles.css?v=49","./app.js?v=49","./status-percent.js?v=49","./admin-login.js?v=49","./cuadrante.js?v=49","./map-stable.js?v=49","./route-planner.js?v=49","./gestion-interactiva.js?v=49","./gestor-cuadrante.js?v=49","./comunicacion-remota.js?v=49","./respaldo-gestion.js?v=49","./gestion-pdf.js?v=49","./manuales.js?v=49","./visual-v43.js?v=49","./manifest.webmanifest?v=49"];
+const CACHE="reco-mt-v50-ui-fix";
+const CORE=["./","./index.html?v=50","./styles.css?v=50","./app.js?v=50","./status-percent.js?v=50","./admin-login.js?v=50","./cuadrante.js?v=50","./map-stable.js?v=50","./route-planner.js?v=50","./gestion-interactiva.js?v=50","./gestor-cuadrante.js?v=50","./comunicacion-remota.js?v=50","./respaldo-gestion.js?v=50","./gestion-pdf.js?v=50","./manuales.js?v=50","./visual-v43.js?v=50","./manifest.webmanifest?v=50"];
 self.addEventListener("install",e=>{
   e.waitUntil((async()=>{
     const c=await caches.open(CACHE);
@@ -13,7 +13,7 @@ self.addEventListener("activate",e=>{
     await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));
     await self.clients.claim();
     const clients=await self.clients.matchAll({type:"window",includeUncontrolled:true});
-    for(const client of clients){try{await client.navigate(new URL("./?v=49",self.registration.scope).href)}catch(_){}}
+    for(const client of clients){try{await client.navigate(new URL("./?v=50",self.registration.scope).href)}catch(_){}}
   })());
 });
 self.addEventListener("fetch",e=>{
@@ -24,6 +24,6 @@ self.addEventListener("fetch",e=>{
       const copy=resp.clone();
       caches.open(CACHE).then(c=>c.put(e.request,copy)).catch(()=>{});
       return resp;
-    }).catch(()=>caches.match(e.request).then(r=>r||caches.match("./index.html?v=49")||caches.match("./"))));
+    }).catch(()=>caches.match(e.request).then(r=>r||caches.match("./index.html?v=50")||caches.match("./"))));
   }
 });
