@@ -120,7 +120,7 @@
     host.innerHTML=`
       <section class="giHero57">
         <div class="giHeroGrid57">
-          <div><span class="eyebrow">CONTROL DE GESTIÓN · MANTENIMIENTO PREVENTIVO MT</span><h2>Gestión de activos con enfoque de Ingeniería Industrial.</h2><p>Disponibilidad, priorización operacional, cobertura de inspecciones, calidad de información y responsables en una sola vista para apoyar planificación, seguimiento y toma de decisiones.</p></div>
+          <div><span class="eyebrow">CONTROL DE GESTIÓN · MANTENIMIENTO PREVENTIVO MT</span><h2>Gestión de activos</h2><p>Disponibilidad, priorización operacional, cobertura de inspecciones, calidad de información y responsables en una sola vista para apoyar planificación, seguimiento y toma de decisiones.</p></div>
           <div class="giHeroScore57">
             <div class="giHeroMetric57"><span>Disponibilidad</span><strong>${availability}%</strong><small>${oper} de ${total} operativos</small></div>
             <div class="giHeroMetric57"><span>Prioridad alta</span><strong>${high}</strong><small>requieren atención preferente</small></div>
