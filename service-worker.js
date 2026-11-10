@@ -1,5 +1,5 @@
-const CACHE="reco-mt-v51-map-ux";
-const CORE=["./","./index.html?v=51","./styles.css?v=51","./app.js?v=51","./status-percent.js?v=51","./admin-login.js?v=51","./cuadrante.js?v=51","./map-stable.js?v=51","./route-planner.js?v=51","./gestion-interactiva.js?v=51","./gestor-cuadrante.js?v=51","./comunicacion-remota.js?v=51","./respaldo-gestion.js?v=51","./gestion-pdf.js?v=51","./manuales.js?v=51","./visual-v43.js?v=51","./manifest.webmanifest?v=51"];
+const CACHE="reco-mt-v52-ficha";
+const CORE=["./","./index.html?v=52","./styles.css?v=52","./app.js?v=52","./status-percent.js?v=52","./admin-login.js?v=52","./cuadrante.js?v=52","./map-stable.js?v=52","./route-planner.js?v=52","./gestion-interactiva.js?v=52","./gestor-cuadrante.js?v=52","./comunicacion-remota.js?v=52","./ficha-reconectador.js?v=52","./respaldo-gestion.js?v=52","./gestion-pdf.js?v=52","./manuales.js?v=52","./visual-v43.js?v=52","./manifest.webmanifest?v=52"];
 self.addEventListener("install",e=>{
   e.waitUntil((async()=>{
     const c=await caches.open(CACHE);
@@ -13,7 +13,7 @@ self.addEventListener("activate",e=>{
     await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));
     await self.clients.claim();
     const clients=await self.clients.matchAll({type:"window",includeUncontrolled:true});
-    for(const client of clients){try{await client.navigate(new URL("./?v=51",self.registration.scope).href)}catch(_){}}
+    for(const client of clients){try{await client.navigate(new URL("./?v=52",self.registration.scope).href)}catch(_){}}
   })());
 });
 self.addEventListener("fetch",e=>{
@@ -24,6 +24,6 @@ self.addEventListener("fetch",e=>{
       const copy=resp.clone();
       caches.open(CACHE).then(c=>c.put(e.request,copy)).catch(()=>{});
       return resp;
-    }).catch(()=>caches.match(e.request).then(r=>r||caches.match("./index.html?v=51")||caches.match("./"))));
+    }).catch(()=>caches.match(e.request).then(r=>r||caches.match("./index.html?v=52")||caches.match("./"))));
   }
 });
