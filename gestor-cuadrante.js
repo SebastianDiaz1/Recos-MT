@@ -71,6 +71,7 @@
   }
 
   function enrichGestion(){
+    if(typeof window.renderGestionIndustrialV57==='function')return;
     setTimeout(()=>{
       const host=document.getElementById('gestionContent');if(!host)return;
       host.querySelectorAll('tr[data-gq]').forEach(tr=>{
