@@ -335,7 +335,7 @@
   }
 
   ensureGestionUI();
-  document.addEventListener('click',e=>{if(e.target.closest('[data-view="gestion"]'))setTimeout(renderGestion,30);});
+  document.addEventListener('click',e=>{if(e.target.closest('[data-view="gestion"]'))setTimeout(()=>{if(typeof window.renderGestionIndustrialV57==='function')window.renderGestionIndustrialV57();else renderGestion();},30);});
   setTimeout(renderGestion,650);
   window.renderGestion=renderGestion;
 })();
