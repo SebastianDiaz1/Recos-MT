@@ -10,6 +10,38 @@
   function statusClass(s){return s==='Fuera de servicio'?'danger':s==='Con observaciones'?'warn':'ok';}
   function statusIcon(s){return s==='Fuera de servicio'?'⛔':s==='Con observaciones'?'⚠':'✓';}
   function hasCoords(r){return Number.isFinite(Number(r?.lat))&&Number.isFinite(Number(r?.lon));}
+  let pendingMapFocusV55=null;
+
+  function focusMapEquipmentV55(r){
+    if(!r||!hasCoords(r))return;
+    pendingMapFocusV55={id:r.id,lat:Number(r.lat),lon:Number(r.lon),codigo:r.codigo};
+    try{goView('mapa');}catch(_){document.querySelector('[data-view="mapa"]')?.click();}
+    let attempts=0;
+    const tryFocus=()=>{
+      attempts++;
+      try{
+        if(typeof recoLeafletMap!=='undefined'&&recoLeafletMap){
+          recoLeafletMap.invalidateSize(false);
+          recoLeafletMap.setView([pendingMapFocusV55.lat,pendingMapFocusV55.lon],17,{animate:true});
+          if(typeof recoMarkerLayer!=='undefined'&&recoMarkerLayer?.eachLayer){
+            recoMarkerLayer.eachLayer(layer=>{
+              try{
+                const ll=layer.getLatLng?.();
+                if(ll&&Math.abs(ll.lat-pendingMapFocusV55.lat)<0.00001&&Math.abs(ll.lng-pendingMapFocusV55.lon)<0.00001){
+                  layer.openPopup?.();
+                }
+              }catch(_){}
+            });
+          }
+          pendingMapFocusV55=null;
+          return;
+        }
+      }catch(_){}
+      if(attempts<12)setTimeout(tryFocus,120);
+    };
+    setTimeout(tryFocus,80);
+  }
+  window.focusMapEquipmentV55=focusMapEquipmentV55;
 
   function ensureStyles(){
     if(document.getElementById('equiposV54Styles'))return;
@@ -181,7 +213,7 @@
       bar.innerHTML='<div><strong>'+arr.length+' equipos visibles</strong><span> de '+total+' registrados</span></div><span>'+att+' requieren atención en esta vista</span>';
     }
     grid.querySelectorAll('[data-open-equipo]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();showReco(Number(b.dataset.openEquipo));}));
-    grid.querySelectorAll('[data-map-equipo]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const id=Number(b.dataset.mapEquipo),r=(state.reconectadores||[]).find(x=>x.id===id);if(!r)return;goView('mapa');setTimeout(()=>{try{recoLeafletMap?.setView([Number(r.lat),Number(r.lon)],16,{animate:true});}catch(_){}},160);}));
+    grid.querySelectorAll('[data-map-equipo]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const id=Number(b.dataset.mapEquipo),r=(state.reconectadores||[]).find(x=>x.id===id);if(!r)return;focusMapEquipmentV55(r);}));
     grid.querySelectorAll('[data-route-equipo]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const id=Number(b.dataset.routeEquipo),r=(state.reconectadores||[]).find(x=>x.id===id);if(r&&typeof googleRoute==='function')googleRoute(Number(r.lat),Number(r.lon));}));
     grid.querySelectorAll('[data-equipo-id]').forEach(card=>card.addEventListener('click',()=>showReco(Number(card.dataset.equipoId))));
   }
