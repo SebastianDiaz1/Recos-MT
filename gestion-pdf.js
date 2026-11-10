@@ -244,27 +244,18 @@
 
   async function generate(share=false){
     const btn=document.getElementById('pdfGenerate58');
-    const shareBtn=document.getElementById('pdfShare58');
-    if(btn){btn.disabled=true;btn.textContent='Generando...';}
-    if(shareBtn)shareBtn.disabled=true;
+    const shareBtn=null;
+    if(btn){btn.disabled=true;btn.textContent='Generando PDF...';}
     try{
       const {doc,filename}=await build();
-      const blob=doc.output('blob');
-      const file=new File([blob],filename,{type:'application/pdf'});
-      if(share&&navigator.share&&navigator.canShare?.({files:[file]})){
-        await navigator.share({title:'Informe de Gestión de Activos MT',text:'Informe PDF generado desde Reconectadores MT.',files:[file]});
-        if(typeof toast==='function')toast('PDF listo para compartir.');
-      }else{
-        doc.save(filename);
-        if(typeof toast==='function')toast('PDF generado correctamente.');
-      }
+      doc.save(filename);
+      if(typeof toast==='function')toast('Archivo PDF generado correctamente.');
     }catch(e){
       console.error(e);
       if(typeof toast==='function')toast(e.message||'No fue posible generar el PDF.');
       else alert(e.message||'No fue posible generar el PDF.');
     }finally{
-      if(btn){btn.disabled=false;btn.textContent='Generar PDF';}
-      if(shareBtn)shareBtn.disabled=false;
+      if(btn){btn.disabled=false;btn.textContent='Descargar informe PDF';}
     }
   }
 
@@ -292,17 +283,14 @@
           <p style="margin:0;font-size:9px;color:#748396;line-height:1.5">El PDF utiliza los filtros activos de esta pantalla. Si filtras por cuadrante, estado, gestor o comunicación remota, el informe se genera con esa misma selección.</p>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
-          <button id="pdfGenerate58" class="btn primary" type="button">Generar PDF</button>
-          <button id="pdfShare58" class="btn secondary" type="button">Generar y compartir</button>
+          <button id="pdfGenerate58" class="btn primary" type="button">Descargar informe PDF</button>
         </div>
       </div>`;
     host.appendChild(panel);
     document.getElementById('pdfGenerate58')?.addEventListener('click',()=>generate(false));
-    document.getElementById('pdfShare58')?.addEventListener('click',()=>generate(true));
   }
 
   window.generarInformeGestionPDF=()=>generate(false);
-  window.generarYCompartirGestionPDF=()=>generate(true);
   document.addEventListener('click',e=>{if(e.target.closest('[data-view="gestion"]'))setTimeout(install,160);});
   const host=document.getElementById('gestionContent');
   if(host)new MutationObserver(()=>setTimeout(install,20)).observe(host,{childList:true});
