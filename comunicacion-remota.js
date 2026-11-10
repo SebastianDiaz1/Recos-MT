@@ -61,6 +61,7 @@
   }
 
   function enrichGestion(){
+    if(typeof window.renderGestionIndustrialV57==='function')return;
     setTimeout(()=>{
       const host=document.getElementById('gestionContent');if(!host)return;
       const cards=host.querySelector('.gKpis')||host.querySelector('.gKpi')?.parentElement;
