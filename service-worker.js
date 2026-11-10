@@ -1,5 +1,5 @@
-const CACHE="reco-mt-v52-ficha";
-const CORE=["./","./index.html?v=52","./styles.css?v=52","./app.js?v=52","./status-percent.js?v=52","./admin-login.js?v=52","./cuadrante.js?v=52","./map-stable.js?v=52","./route-planner.js?v=52","./gestion-interactiva.js?v=52","./gestor-cuadrante.js?v=52","./comunicacion-remota.js?v=52","./ficha-reconectador.js?v=52","./respaldo-gestion.js?v=52","./gestion-pdf.js?v=52","./manuales.js?v=52","./visual-v43.js?v=52","./manifest.webmanifest?v=52"];
+const CACHE="reco-mt-v53-home";
+const CORE=["./","./index.html?v=53","./styles.css?v=53","./app.js?v=53","./status-percent.js?v=53","./admin-login.js?v=53","./cuadrante.js?v=53","./map-stable.js?v=53","./route-planner.js?v=53","./gestion-interactiva.js?v=53","./gestor-cuadrante.js?v=53","./comunicacion-remota.js?v=53","./ficha-reconectador.js?v=53","./respaldo-gestion.js?v=53","./gestion-pdf.js?v=53","./manuales.js?v=53","./visual-v43.js?v=53","./inicio-profesional.js?v=53","./manifest.webmanifest?v=53"];
 self.addEventListener("install",e=>{
   e.waitUntil((async()=>{
     const c=await caches.open(CACHE);
@@ -13,7 +13,7 @@ self.addEventListener("activate",e=>{
     await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));
     await self.clients.claim();
     const clients=await self.clients.matchAll({type:"window",includeUncontrolled:true});
-    for(const client of clients){try{await client.navigate(new URL("./?v=52",self.registration.scope).href)}catch(_){}}
+    for(const client of clients){try{await client.navigate(new URL("./?v=53",self.registration.scope).href)}catch(_){}}
   })());
 });
 self.addEventListener("fetch",e=>{
@@ -24,6 +24,6 @@ self.addEventListener("fetch",e=>{
       const copy=resp.clone();
       caches.open(CACHE).then(c=>c.put(e.request,copy)).catch(()=>{});
       return resp;
-    }).catch(()=>caches.match(e.request).then(r=>r||caches.match("./index.html?v=52")||caches.match("./"))));
+    }).catch(()=>caches.match(e.request).then(r=>r||caches.match("./index.html?v=53")||caches.match("./"))));
   }
 });
