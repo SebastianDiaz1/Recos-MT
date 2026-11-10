@@ -98,12 +98,12 @@
   window.renderMap=function(){prevMap();enrichMap();};
 
   const prevAll=window.renderAll;
-  if(typeof prevAll==='function')window.renderAll=function(){prevAll();addGestorForm();addGestorFilter();populateGestores();try{renderCatalogWithGestor()}catch(_){};if(document.getElementById('gestion')?.classList.contains('active-view'))enrichGestion();};
+  if(typeof prevAll==='function')window.renderAll=function(){prevAll();addGestorForm();addGestorFilter();populateGestores();try{window.renderRecos?.()}catch(_){};if(document.getElementById('gestion')?.classList.contains('active-view'))enrichGestion();};
 
   document.addEventListener('click',e=>{if(e.target.closest('[data-view="gestion"]'))enrichGestion();});
   const obs=new MutationObserver(()=>{if(document.getElementById('gestion')?.classList.contains('active-view'))enrichGestion();});
   const g=document.getElementById('gestionContent');if(g)obs.observe(g,{childList:true,subtree:true});
-  setTimeout(()=>{addGestorForm();addGestorFilter();populateGestores();try{renderCatalogWithGestor()}catch(_){};enrichGestion();},600);
+  setTimeout(()=>{addGestorForm();addGestorFilter();populateGestores();try{window.renderRecos?.()}catch(_){};enrichGestion();},600);
 })();
 
 // Carga la biblioteca técnica de Manuales sin alterar la navegación existente.
