@@ -84,6 +84,7 @@
           <div class="mapActionsV51">
             <button id="mapFitAllV51" class="btn ghost" type="button">◎ Ver todos</button>
             <button id="mapLocateV51" class="btn ghost" type="button">⌖ Mi ubicación</button>
+            <button id="mapFullscreenV51" class="btn ghost" type="button">⛶ Pantalla completa</button>
             <button id="mapRouteToggleV51" class="btn primary" type="button">↗ Crear ruta</button>
           </div>
         </div>
@@ -125,6 +126,7 @@
     document.querySelectorAll('[data-map-comm]').forEach(b=>b.addEventListener('click',()=>{filters.comm=filters.comm===b.dataset.mapComm?'':b.dataset.mapComm;if(c)c.value=filters.comm;syncChips();refresh();}));
     document.getElementById('mapFitAllV51')?.addEventListener('click',fitVisible);
     document.getElementById('mapLocateV51')?.addEventListener('click',locateMe);
+    document.getElementById('mapFullscreenV51')?.addEventListener('click',toggleFullscreen);
     document.getElementById('mapRouteToggleV51')?.addEventListener('click',()=>toggleRoute(true));
     document.getElementById('mapRouteCloseV51')?.addEventListener('click',()=>toggleRoute(false));
     document.getElementById('routeSelectVisibleV51')?.addEventListener('click',()=>{rows().forEach(r=>selected.add(r.id));renderRoute();});
@@ -185,6 +187,13 @@
     const arr=rows();if(!recoLeafletMap||!arr.length)return;
     const b=arr.map(r=>[Number(r.lat),Number(r.lon)]);
     if(b.length===1)recoLeafletMap.setView(b[0],16,{animate:false});else recoLeafletMap.fitBounds(b,{padding:[35,35],maxZoom:15,animate:false});
+  }
+
+  function toggleFullscreen(){
+    const panel=document.querySelector('#mapa .map-panel');
+    if(!panel)return;
+    if(!document.fullscreenElement){panel.requestFullscreen?.().then(()=>setTimeout(()=>recoLeafletMap?.invalidateSize(false),120)).catch(()=>{});}
+    else{document.exitFullscreen?.();}
   }
 
   function locateMe(){
