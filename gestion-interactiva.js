@@ -36,6 +36,7 @@
   }
 
   function renderGestionInteractiva(){
+    if(typeof window.renderGestionIndustrialV57==='function')return window.renderGestionIndustrialV57();
     const host=ensureUI();if(!host)return;
     const all=baseRows(),rows=filteredRows(),ins=state.inspecciones||[];
     const total=rows.length,oper=rows.filter(r=>r.estado==='Operativo').length,obs=rows.filter(r=>r.estado==='Con observaciones').length,fuera=rows.filter(r=>r.estado==='Fuera de servicio').length;
