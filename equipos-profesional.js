@@ -220,6 +220,16 @@
 
   window.renderRecos=render;
   window.renderEquiposV54=render;
+
+  // v56: después de cualquier render global, Equipos siempre termina en la interfaz moderna.
+  const prevRenderAllV56=window.renderAll;
+  if(typeof prevRenderAllV56==='function'){
+    window.renderAll=function(){
+      prevRenderAllV56();
+      render();
+    };
+  }
+
   ensureStyles();
   setTimeout(()=>{ensureUI();render();},250);
   document.addEventListener('click',e=>{if(e.target.closest('[data-view="catalogo"]'))setTimeout(()=>{ensureUI();render();},40);});
