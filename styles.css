@@ -231,3 +231,7 @@ body[data-theme="dark"].uxV49 .quickActionsV49 button{background:rgba(255,255,25
   body[data-theme="dark"].uxV49 .mobileNavV43{background:rgba(13,25,39,.96);border-color:#283a4e}
   body[data-theme="dark"].uxV49 .mobileNavBtn.active{background:#173657}
 }
+
+/* v61 · Identidad Reconectadores MT */
+.logo{overflow:hidden;padding:0!important;background:transparent!important;box-shadow:0 8px 20px rgba(0,0,0,.16)!important}
+.logo img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}
