@@ -1,5 +1,5 @@
-const CACHE="reco-mt-v59-pdf-direct";
-const CORE=["./","./index.html?v=59","./styles.css?v=59","./app.js?v=59","./status-percent.js?v=59","./admin-login.js?v=59","./cuadrante.js?v=59","./map-stable.js?v=59","./route-planner.js?v=59","./gestion-interactiva.js?v=59","./gestor-cuadrante.js?v=59","./comunicacion-remota.js?v=59","./ficha-reconectador.js?v=59","./respaldo-gestion.js?v=59","./gestion-pdf.js?v=59","./manuales.js?v=59","./visual-v43.js?v=59","./inicio-profesional.js?v=59","./equipos-profesional.js?v=59","./gestion-industrial.js?v=59","./manifest.webmanifest?v=59"];
+const CACHE="reco-mt-v60-pdf-data";
+const CORE=["./","./index.html?v=60","./styles.css?v=60","./app.js?v=60","./status-percent.js?v=60","./admin-login.js?v=60","./cuadrante.js?v=60","./map-stable.js?v=60","./route-planner.js?v=60","./gestion-interactiva.js?v=60","./gestor-cuadrante.js?v=60","./comunicacion-remota.js?v=60","./ficha-reconectador.js?v=60","./respaldo-gestion.js?v=60","./gestion-pdf.js?v=60","./manuales.js?v=60","./visual-v43.js?v=60","./inicio-profesional.js?v=60","./equipos-profesional.js?v=60","./gestion-industrial.js?v=60","./manifest.webmanifest?v=60"];
 self.addEventListener("install",e=>{
   e.waitUntil((async()=>{
     const c=await caches.open(CACHE);
@@ -13,7 +13,7 @@ self.addEventListener("activate",e=>{
     await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));
     await self.clients.claim();
     const clients=await self.clients.matchAll({type:"window",includeUncontrolled:true});
-    for(const client of clients){try{await client.navigate(new URL("./?v=59",self.registration.scope).href)}catch(_){}}
+    for(const client of clients){try{await client.navigate(new URL("./?v=60",self.registration.scope).href)}catch(_){}}
   })());
 });
 self.addEventListener("fetch",e=>{
@@ -24,6 +24,6 @@ self.addEventListener("fetch",e=>{
       const copy=resp.clone();
       caches.open(CACHE).then(c=>c.put(e.request,copy)).catch(()=>{});
       return resp;
-    }).catch(()=>caches.match(e.request).then(r=>r||caches.match("./index.html?v=59")||caches.match("./"))));
+    }).catch(()=>caches.match(e.request).then(r=>r||caches.match("./index.html?v=60")||caches.match("./"))));
   }
 });
