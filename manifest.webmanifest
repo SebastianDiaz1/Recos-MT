@@ -1,6 +1,6 @@
 {
-  "name": "Reconectadores MT · Iquique",
-  "short_name": "Reconectadores",
+  "name": "Reconectadores MT · Delegación Iquique",
+  "short_name": "Reconectadores MT",
   "description": "Base técnica interactiva de reconectadores MT de la Delegación Iquique.",
   "start_url": "./index.html",
   "scope": "./",
@@ -9,7 +9,17 @@
   "theme_color": "#0d1a2a",
   "orientation": "portrait-primary",
   "icons": [
-    {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png"},
-    {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png"}
+    {
+      "src": "icons/reco-app.svg?v=61",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/reco-app.svg?v=61",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
   ]
 }
