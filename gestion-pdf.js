@@ -2,8 +2,9 @@
 (function(){
   const pct=(n,d)=>d?Math.round(n*100/d):0;
   const norm=v=>String(v||'').trim();
-  const allRows=()=>window.state?.reconectadores||[];
-  const inspections=()=>window.state?.inspecciones||[];
+  const appState=()=>{try{return typeof state!=='undefined'?state:(window.state||{});}catch(_){return window.state||{};}};
+  const allRows=()=>appState().reconectadores||[];
+  const inspections=()=>appState().inspecciones||[];
   const hasCoords=r=>Number.isFinite(Number(r?.lat))&&Number.isFinite(Number(r?.lon));
   const comm=v=>{const s=norm(v).toUpperCase();return s==='SI'?'SI':s==='NO'?'NO':'-';};
   const fmt=v=>{if(!v)return '-';const d=new Date(v+'T00:00:00');return Number.isNaN(d.getTime())?String(v):d.toLocaleDateString('es-CL');};
