@@ -165,7 +165,7 @@
       (!ui.quadrant||norm(r.cuadrante)===ui.quadrant)&&
       (!ui.manager||norm(r.gestor_cuadrante)===ui.manager)&&
       (!ui.comm||comm(r.comunicacion_remota)===ui.comm)&&
-      (!q||[r.codigo,r.alimentador,r.ubicacion,r.gestor_cuadrante,r.marca,r.estado,r.cuadrante,r.observaciones].some(v=>lower(v).includes(q)))
+      (!q||[r.codigo,r.alimentador,r.ubicacion,r.gestor_cuadrante,r.marca,r.estado,r.cuadrante,r.observaciones,r.subestacion,r.grupo,r.tecnologia].some(v=>lower(v).includes(q)))
     );
     const rank={Operativo:0,'Con observaciones':1,'Fuera de servicio':2};
     arr.sort((a,b)=>{
@@ -183,7 +183,9 @@
     const flags=[
       '<span class="equipoFlagV54 '+(remote==='SI'?'remoteYes':remote==='NO'?'remoteNo':'')+'">◉ Remota: '+esc(remote)+'</span>',
       r.fecha_verificacion?'<span class="equipoFlagV54">◷ '+esc(fdate(r.fecha_verificacion))+'</span>':'<span class="equipoFlagV54 alert">◷ Sin fecha verificación</span>',
-      /bypass/i.test(obs)?'<span class="equipoFlagV54 alert">↯ BYPASS</span>':''
+      /bypass/i.test(obs)?'<span class="equipoFlagV54 alert">↯ BYPASS</span>':'',
+      Number(r.eventos_total||0)>0?'<span class="equipoFlagV54">▥ 2024–2026: '+Number(r.eventos_total||0)+' eventos</span>':'',
+      Number(r.saidi_registros_total||0)>0?'<span class="equipoFlagV54">SAIDI: '+Number(r.saidi_registros_total||0)+' registros</span>':''
     ].filter(Boolean).join('');
     return `<article class="equipoCardV54 ${cls}" data-equipo-id="${r.id}">
       <div class="equipoCardHeadV54"><div><span class="equipoFeederV54">${esc(r.alimentador||'Sin alimentador')}</span><div class="equipoCodeV54">${esc(r.codigo)}</div></div><span class="equipoStatusV54 ${cls}">${statusIcon(r.estado)} ${esc(r.estado||'-')}</span></div>
@@ -192,7 +194,7 @@
         <div class="equipoMetaItemV54"><span>Equipo / referencia</span><strong>${esc(r.marca||'-')}</strong></div>
         <div class="equipoMetaItemV54"><span>Cuadrante</span><strong>${esc(r.cuadrante||'-')}</strong></div>
         <div class="equipoMetaItemV54"><span>Gestor</span><strong>${esc(r.gestor_cuadrante||'Sin gestor')}</strong></div>
-        <div class="equipoMetaItemV54"><span>Protección F / R</span><strong>${esc((r.sobrecorriente_fase||'-')+' / '+(r.sobrecorriente_residual||'-'))}</strong></div>
+        <div class="equipoMetaItemV54"><span>Protección F / R</span><strong>${esc((r.sobrecorriente_fase||'-')+' / '+(r.sobrecorriente_residual||'-'))}</strong></div>\n        <div class="equipoMetaItemV54"><span>Subestación / grupo</span><strong>${esc((r.subestacion||'-')+' · '+(r.grupo||'-'))}</strong></div>\n        <div class="equipoMetaItemV54"><span>Tecnología</span><strong>${esc(r.tecnologia||r.marca||'-')}</strong></div>
       </div>
       <div class="equipoFlagsV54">${flags}</div>
       <div class="equipoActionsV54">
