@@ -4,7 +4,7 @@ const today=()=>new Date().toISOString().slice(0,10);
 const makeClient=(password="")=>supabase.createClient(SUPABASE_URL,SUPABASE_KEY,password?{global:{headers:{"x-admin-password":password}}}:undefined);
 let adminPassword=sessionStorage.getItem("reco_admin_password")||"";
 let sb=makeClient(adminPassword);
-let state={session:{name:"Consulta",role:"viewer"},reconectadores:[],inspecciones:[]};
+let state={session:{name:"Consulta",role:"viewer"},reconectadores:[],inspecciones:[],eventos:[],saidi_fuente:[],saidi_por_equipo:[],actualizacion:null};
 
 async function refreshSession(){
  if(!adminPassword){state.session={name:"Consulta",role:"viewer"};return;}
@@ -26,7 +26,33 @@ async function loadData(showToast=false){
      sb.from('inspecciones').select('*').order('fecha',{ascending:false})
    ]);
    if(er||ei)throw(er||ei);
-   state.reconectadores=r||[];state.inspecciones=i||[];
+   let extra=null;
+   try{if(typeof window.loadUpdateDataV63==='function')extra=await window.loadUpdateDataV63();}catch(e){console.warn("Actualización 2024-2026 no disponible:",e);}
+   const catMap=new Map((extra?.catastro||[]).map(x=>[x.codigo,x]));
+   state.reconectadores=(r||[]).map(row=>{
+     const x=catMap.get(row.codigo)||{};
+     return {...x,...row,
+       subestacion:row.subestacion||x.subestacion||null,
+       grupo:row.grupo||x.grupo||null,
+       tecnologia:row.tecnologia||x.tecnologia||x.marca||row.marca||null,
+       saidi_registros_2024:x.saidi_registros_2024??0,
+       saidi_registros_2025:x.saidi_registros_2025??0,
+       saidi_registros_2026:x.saidi_registros_2026??0,
+       saidi_registros_total:x.saidi_registros_total??0,
+       eventos_2024:x.eventos_2024??0,
+       eventos_2025:x.eventos_2025??0,
+       eventos_2026:x.eventos_2026??0,
+       eventos_total:x.eventos_total??0,
+       horas_escenario:x.horas_escenario??0,
+       nivel_actividad:x.nivel_actividad||'Sin eventos',
+       origen_escenario:x.origen_escenario||'REFERENCIAL (escenario, no histórico CGE)'
+     };
+   });
+   state.inspecciones=i||[];
+   state.eventos=extra?.eventos||[];
+   state.saidi_fuente=extra?.saidi_fuente||[];
+   state.saidi_por_equipo=extra?.saidi_por_equipo||[];
+   state.actualizacion=extra?{version:extra.version||window.RECO_DATA_VERSION||'2026-11-14',origen:'Catastro MT APP 2024-2026 con SAIDI'}:null;
    if(loadRetryTimer){clearTimeout(loadRetryTimer);loadRetryTimer=null;}
    renderAll();
    if(showToast)toast("Información actualizada");
@@ -65,7 +91,7 @@ async function logoutAdmin(){adminPassword="";sessionStorage.removeItem("reco_ad
 function goView(id){document.querySelector(`[data-view="${id}"]`).click()}
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.view==="administrar"&&!isAdmin())return;document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".view").forEach(x=>x.classList.remove("active-view"));document.getElementById(b.dataset.view).classList.add("active-view");if(b.dataset.view==="mapa")renderMap()}));
 searchReco.addEventListener("input",renderRecos);filterStatus.addEventListener("change",renderRecos);filterBrand.addEventListener("change",renderRecos);
-function downloadBackup(){let b=new Blob([JSON.stringify({reconectadores:state.reconectadores,inspecciones:state.inspecciones},null,2)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=`reconectadores_mt_${today()}.json`;a.click();URL.revokeObjectURL(u)}
+function downloadBackup(){let b=new Blob([JSON.stringify({actualizacion:state.actualizacion,reconectadores:state.reconectadores,inspecciones:state.inspecciones,eventos:state.eventos,saidi_fuente:state.saidi_fuente,saidi_por_equipo:state.saidi_por_equipo},null,2)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=`reconectadores_mt_${today()}.json`;a.click();URL.revokeObjectURL(u)}
 function renderAll(){renderAccess();renderDashboard();renderFilters();renderRecos();renderMap()}
 buildAdminPasswordModal();
 (async()=>{await refreshSession();await loadData();setInterval(()=>loadData(false),20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadData(false)});})();
