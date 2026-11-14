@@ -239,6 +239,73 @@
     const note='El Índice de Prioridad Operacional es un indicador referencial generado automáticamente con los datos disponibles en la aplicación. Considera estado del equipo, BYPASS informado, comunicación remota, fecha de verificación, georreferencia e historial de inspecciones. No reemplaza la matriz formal de criticidad del Proyecto de Título.';
     doc.text(doc.splitTextToSize(note,182),14,y+5);
 
+    // Actualización v63 · Historial referencial 2024–2026 y SAIDI.
+    const selectedCodes=new Set(rs.map(r=>r.codigo));
+    const ev=(state.eventos||[]).filter(x=>selectedCodes.has(x.reconectador));
+    const sf=(state.saidi_fuente||[]).filter(x=>selectedCodes.has(x.equipo_catastro));
+    const evHours=ev.reduce((a,x)=>a+(Number(x.duracion_h)||0),0);
+    const evEquip=new Set(ev.map(x=>x.reconectador)).size;
+    const saidiNonzero=sf.filter(x=>Number(x.saidi_reportado??x.saidi_reporte)>0).length;
+    const saidiSum=sf.reduce((a,x)=>a+(Number(x.saidi_reportado??x.saidi_reporte)||0),0);
+    const evYears=[2024,2025,2026].map(year=>[String(year),ev.filter(x=>Number(x.anio)===year).length,ev.filter(x=>Number(x.anio)===year).reduce((a,x)=>a+(Number(x.duracion_h)||0),0).toFixed(2)]);
+    const causes={};ev.forEach(x=>{const k=x.causa_cge||'Sin causa';causes[k]=(causes[k]||0)+1;});
+    const topCauses=Object.entries(causes).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const eq={};ev.forEach(x=>{const k=x.reconectador||'-';const q=eq[k]||(eq[k]={n:0,h:0});q.n++;q.h+=Number(x.duracion_h)||0;});
+    const topEq=Object.entries(eq).sort((a,b)=>b[1].n-a[1].n||b[1].h-a[1].h).slice(0,10);
+
+    doc.addPage();
+    header(doc,'Antecedentes 2024–2026 y SAIDI','Escenario referencial y fuente Power BI · '+filter);
+    kpi(doc,'Eventos escenario',ev.length,'No verificados',14,39,56,23);
+    kpi(doc,'Horas escenario',evHours.toFixed(2),'h acumuladas',76,39,56,23);
+    kpi(doc,'Equipos con eventos',evEquip,'de '+rs.length+' seleccionados',138,39,56,23);
+    kpi(doc,'Registros SAIDI',sf.length,saidiNonzero+' con valor > 0',14,67,56,23);
+    kpi(doc,'SAIDI reportado',saidiSum.toFixed(2),'h/cliente · suma fuente',76,67,56,23);
+    kpi(doc,'Fuente','2024–2026','Catastro + Power BI',138,67,56,23);
+
+    doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.text('Distribución anual del escenario',14,102);
+    doc.autoTable({
+      startY:106,
+      head:[['Año','Eventos','Horas escenario']],
+      body:evYears,
+      theme:'grid',
+      styles:{fontSize:7,cellPadding:2,textColor:[48,60,76]},
+      headStyles:{fillColor:[20,78,126],textColor:255},
+      columnStyles:{0:{halign:'center'},1:{halign:'center'},2:{halign:'center'}},
+      margin:{left:14,right:112}
+    });
+
+    doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.text('Principales causas del escenario',108,102);
+    doc.autoTable({
+      startY:106,
+      head:[['Causa','Eventos']],
+      body:topCauses.map(x=>[x[0],x[1]]),
+      theme:'striped',
+      styles:{fontSize:6.5,cellPadding:1.7,textColor:[48,60,76]},
+      headStyles:{fillColor:[15,39,69],textColor:255},
+      columnStyles:{1:{cellWidth:18,halign:'center'}},
+      margin:{left:108,right:14}
+    });
+
+    const startTop=Math.max(154,doc.lastAutoTable?.finalY||154);
+    doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.text('Equipos con mayor actividad en el escenario',14,startTop+8);
+    doc.autoTable({
+      startY:startTop+12,
+      head:[['Equipo','Subestación','Alimentador','Eventos','Horas']],
+      body:topEq.map(([code,a])=>{const rr=rs.find(z=>z.codigo===code)||{};return [code,rr.subestacion||'-',rr.alimentador||'-',a.n,a.h.toFixed(2)];}),
+      theme:'grid',
+      styles:{fontSize:6.5,cellPadding:1.8,textColor:[48,60,76]},
+      headStyles:{fillColor:[20,78,126],textColor:255},
+      columnStyles:{3:{halign:'center'},4:{halign:'center'}},
+      margin:{left:14,right:14,bottom:32}
+    });
+
+    let yn=(doc.lastAutoTable?.finalY||230)+8;
+    if(yn>257){doc.addPage();header(doc,'Nota metodológica 2024–2026','Alcance de la información complementaria');yn=43;}
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(35,50,70);doc.text('Alcance y limitaciones de la actualización',14,yn);
+    doc.setFont('helvetica','normal');doc.setFontSize(6.6);doc.setTextColor(90,102,118);
+    const updateNote='Los eventos incluidos en EVENTOS_APP están identificados en el archivo fuente como NO VERIFICADO - ESCENARIO DE PRUEBA. No deben interpretarse como fallas históricas CGE confirmadas sin respaldo SCADA/COZ, SAP o Centrality. Los registros SAIDI provienen de la fuente Power BI y su vinculación por código no acredita por sí sola una falla o indisponibilidad física del reconectador. Estos antecedentes se presentan separados del Índice de Prioridad Operacional.';
+    doc.text(doc.splitTextToSize(updateNote,182),14,yn+5);
+
     footer(doc);
     return {doc,filename:'Gestion_Activos_MT_'+t.file+'.pdf'};
   }
