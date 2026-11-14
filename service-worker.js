@@ -1,5 +1,5 @@
-const CACHE="reco-mt-v62-native-icons";
-const CORE=["./","./index.html?v=62","./styles.css?v=62","./app.js?v=62","./status-percent.js?v=62","./admin-login.js?v=62","./cuadrante.js?v=62","./map-stable.js?v=62","./route-planner.js?v=62","./gestion-interactiva.js?v=62","./gestor-cuadrante.js?v=62","./comunicacion-remota.js?v=62","./ficha-reconectador.js?v=62","./respaldo-gestion.js?v=62","./gestion-pdf.js?v=62","./manuales.js?v=62","./visual-v43.js?v=62","./inicio-profesional.js?v=62","./equipos-profesional.js?v=62","./gestion-industrial.js?v=62","./manifest.webmanifest?v=62","./icons/reco-app.svg?v=62","./icons/icon-192.png?v=62","./icons/icon-512.png?v=62","./icons/apple-touch-icon.png?v=62"];
+const CACHE="reco-mt-v63-catastro-2024-2026";
+const CORE=["./","./index.html?v=63","./styles.css?v=63","./data-update-v63.js?v=63","./app.js?v=63","./status-percent.js?v=63","./admin-login.js?v=63","./cuadrante.js?v=63","./map-stable.js?v=63","./route-planner.js?v=63","./gestion-interactiva.js?v=63","./gestor-cuadrante.js?v=63","./comunicacion-remota.js?v=63","./ficha-reconectador.js?v=63","./respaldo-gestion.js?v=63","./gestion-pdf.js?v=63","./manuales.js?v=63","./visual-v43.js?v=63","./inicio-profesional.js?v=63","./equipos-profesional.js?v=63","./gestion-industrial.js?v=63","./actualizacion-2024-2026.js?v=63","./manifest.webmanifest?v=63","./icons/reco-app.svg?v=63","./icons/icon-192.png?v=63","./icons/icon-512.png?v=63","./icons/apple-touch-icon.png?v=63"];
 self.addEventListener("install",e=>{
   e.waitUntil((async()=>{
     const c=await caches.open(CACHE);
@@ -13,7 +13,7 @@ self.addEventListener("activate",e=>{
     await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));
     await self.clients.claim();
     const clients=await self.clients.matchAll({type:"window",includeUncontrolled:true});
-    for(const client of clients){try{await client.navigate(new URL("./?v=62",self.registration.scope).href)}catch(_){}}
+    for(const client of clients){try{await client.navigate(new URL("./?v=63",self.registration.scope).href)}catch(_){}}
   })());
 });
 self.addEventListener("fetch",e=>{
@@ -24,6 +24,6 @@ self.addEventListener("fetch",e=>{
       const copy=resp.clone();
       caches.open(CACHE).then(c=>c.put(e.request,copy)).catch(()=>{});
       return resp;
-    }).catch(()=>caches.match(e.request).then(r=>r||caches.match("./index.html?v=62")||caches.match("./"))));
+    }).catch(()=>caches.match(e.request).then(r=>r||caches.match("./index.html?v=63")||caches.match("./"))));
   }
 });
