@@ -255,7 +255,7 @@
 
     doc.addPage();
     header(doc,'Antecedentes 2024–2026 y SAIDI','Historial integrado y fuente SAIDI · '+filter);
-    kpi(doc,'Eventos registrados',ev.length,'No verificados',14,39,56,23);
+    kpi(doc,'Eventos registrados',ev.length,'2024–2026',14,39,56,23);
     kpi(doc,'Horas acumuladas',evHours.toFixed(2),'h acumuladas',76,39,56,23);
     kpi(doc,'Equipos con eventos',evEquip,'de '+rs.length+' seleccionados',138,39,56,23);
     kpi(doc,'Registros SAIDI',sf.length,saidiNonzero+' con valor > 0',14,67,56,23);
