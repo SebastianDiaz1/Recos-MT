@@ -68,7 +68,7 @@
       .equipoLocationV54{display:flex;gap:6px;align-items:flex-start;margin-top:9px;color:#67778a;font-size:9px;line-height:1.35;min-height:25px}.equipoLocationV54 b{color:#486078}
       .equipoMetaV54{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}.equipoMetaItemV54{padding:8px 9px;border-radius:9px;background:#f8fafc;border:1px solid #edf1f4;min-height:53px}.equipoMetaItemV54 span{display:block;font-size:7px;text-transform:uppercase;letter-spacing:.05em;color:#8592a2}.equipoMetaItemV54 strong{display:block;margin-top:4px;font-size:10px;color:#2c425a;line-height:1.25;overflow-wrap:anywhere}
       .equipoFlagsV54{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}.equipoFlagV54{padding:4px 6px;border-radius:7px;font-size:8px;font-weight:800;background:#f0f4f8;color:#5b6e82}.equipoFlagV54.remoteYes{background:#e9f6ef;color:#13714e}.equipoFlagV54.remoteNo{background:#eef1f5;color:#657080}.equipoFlagV54.alert{background:#fff0ee;color:#a23c33}
-      .equipoActionsV54{display:flex;gap:6px;margin-top:11px}.equipoActionsV54 button{flex:1;border:0;border-radius:9px;padding:8px;font-size:9px;font-weight:900;cursor:pointer}.equipoActionsV54 .open{background:#1559c9;color:#fff}.equipoActionsV54 .map{background:#edf3f8;color:#40566d}.equipoActionsV54 .route{background:#edf3f8;color:#40566d}
+      .equipoActionsV54{display:flex;gap:6px;margin-top:11px}.equipoActionsV54 button{flex:1;border:0;border-radius:9px;padding:8px;font-size:9px;font-weight:900;cursor:pointer}.equipoActionsV54 .open{background:#1559c9;color:#fff}.equipoActionsV54 .map{background:#edf3f8;color:#40566d}.equipoActionsV54 .route{background:#edf3f8;color:#40566d}.equipoActionsV54 .inspect{background:#1559c9;color:#fff}
       .listViewV54 .equipoCardV54{display:grid;grid-template-columns:minmax(180px,.65fr) minmax(260px,1fr) minmax(330px,1.15fr) auto;gap:14px;align-items:center}.listViewV54 .equipoLocationV54{margin:0;min-height:0}.listViewV54 .equipoMetaV54{margin:0;grid-template-columns:repeat(2,minmax(0,1fr))}.listViewV54 .equipoFlagsV54{margin:0}.listViewV54 .equipoActionsV54{margin:0;min-width:210px}
       .equiposEmptyV54{grid-column:1/-1;text-align:center;padding:40px 20px;background:#fff;border:1px dashed #d5dee7;border-radius:15px;color:#7d8998}.equiposEmptyV54 strong{display:block;color:#334960;font-size:13px}.equiposEmptyV54 span{display:block;font-size:10px;margin-top:4px}
       body[data-theme="dark"] .equiposToolbarV54,body[data-theme="dark"] .equipoCardV54,body[data-theme="dark"] .equiposEmptyV54{background:#101d2b;border-color:#293c4f}
@@ -199,7 +199,7 @@
       <div class="equipoFlagsV54">${flags}</div>
       <div class="equipoActionsV54">
         <button class="open" type="button" data-open-equipo="${r.id}">Ver ficha</button>
-        ${hasCoords(r)?'<button class="map" type="button" data-map-equipo="'+r.id+'">Mapa</button><button class="route" type="button" data-route-equipo="'+r.id+'">Ruta</button>':''}
+        ${hasCoords(r)?'<button class="map" type="button" data-map-equipo="'+r.id+'">Mapa</button><button class="route" type="button" data-route-equipo="'+r.id+'">Ruta</button>':''}<button class="inspect" type="button" data-inspect-equipo="${esc(r.codigo)}">＋ Inspección</button>
       </div>
     </article>`;
   }
@@ -217,6 +217,7 @@
     grid.querySelectorAll('[data-open-equipo]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();showReco(Number(b.dataset.openEquipo));}));
     grid.querySelectorAll('[data-map-equipo]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const id=Number(b.dataset.mapEquipo),r=(state.reconectadores||[]).find(x=>x.id===id);if(!r)return;focusMapEquipmentV55(r);}));
     grid.querySelectorAll('[data-route-equipo]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const id=Number(b.dataset.routeEquipo),r=(state.reconectadores||[]).find(x=>x.id===id);if(r&&typeof googleRoute==='function')googleRoute(Number(r.lat),Number(r.lon));}));
+    grid.querySelectorAll('[data-inspect-equipo]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const code=b.dataset.inspectEquipo;if(!code)return;if(!isAdmin()){toast('Activa modo administrador para cargar una inspección');return openAccess();}openInspection(code);}));
     grid.querySelectorAll('[data-equipo-id]').forEach(card=>card.addEventListener('click',()=>showReco(Number(card.dataset.equipoId))));
   }
 
