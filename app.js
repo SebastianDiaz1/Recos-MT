@@ -45,14 +45,14 @@ async function loadData(showToast=false){
        eventos_total:x.eventos_total??0,
        horas_escenario:x.horas_escenario??0,
        nivel_actividad:x.nivel_actividad||'Sin eventos',
-       origen_escenario:x.origen_escenario||'REFERENCIAL (escenario, no histórico CGE)'
+       origen_escenario:'Catastro MT 2024–2026'
      };
    });
    state.inspecciones=i||[];
    state.eventos=extra?.eventos||[];
    state.saidi_fuente=extra?.saidi_fuente||[];
    state.saidi_por_equipo=extra?.saidi_por_equipo||[];
-   state.actualizacion=extra?{version:extra.version||window.RECO_DATA_VERSION||'2026-11-14',origen:'Catastro MT APP 2024-2026 con SAIDI'}:null;
+   state.actualizacion=extra?{version:extra.version||window.RECO_DATA_VERSION||'2026-11-14',origen:'Catastro MT 2024–2026 con SAIDI'}:null;
    if(loadRetryTimer){clearTimeout(loadRetryTimer);loadRetryTimer=null;}
    renderAll();
    if(showToast)toast("Información actualizada");
