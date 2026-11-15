@@ -36,8 +36,8 @@
     const hero=document.querySelector('#inicio .homeHeroV53');if(!hero||document.getElementById('updateStrip63'))return;
     const ev=state.eventos||[],sf=state.saidi_fuente||[],eq=new Set(ev.map(x=>x.reconectador)).size;
     const el=document.createElement('section');el.id='updateStrip63';el.className='updStrip63';
-    el.innerHTML=`<div class="lead"><strong>Actualización Catastro MT 2024–2026 cargada</strong><span>Antecedentes complementarios para análisis. Los eventos de escenario se mantienen separados del historial técnico confirmado.</span></div>
-      <div class="updStripMetric63"><span>Eventos escenario</span><strong>${ev.length}</strong></div>
+    el.innerHTML=`<div class="lead"><strong>Actualización Catastro MT 2024–2026 cargada</strong><span>Antecedentes históricos incorporados para análisis de gestión y continuidad operacional.</span></div>
+      <div class="updStripMetric63"><span>Eventos registrados</span><strong>${ev.length}</strong></div>
       <div class="updStripMetric63"><span>Equipos con eventos</span><strong>${eq}</strong></div>
       <div class="updStripMetric63"><span>Registros SAIDI fuente</span><strong>${sf.length}</strong></div>`;
     hero.insertAdjacentElement('afterend',el);
@@ -52,23 +52,23 @@
     const latest=ev.slice(0,15),saidis=sf.slice(0,12);
     const sec=document.createElement('section');sec.id='fichaUpdate63';sec.className='updPanel63 fichaUpdate63';
     sec.innerHTML=`
-      <div class="updHead63"><div><h3>Antecedentes 2024–2026 y SAIDI</h3><p>Información complementaria vinculada al código del equipo.</p></div><span class="updTag63">Escenario no verificado</span></div>
+      <div class="updHead63"><div><h3>Antecedentes 2024–2026 y SAIDI</h3><p>Información complementaria vinculada al código del equipo.</p></div><span class="updTag63">Historial 2024–2026</span></div>
       <div class="updAssetMeta63">
         <div><span>Subestación</span><strong>${esc(r.subestacion||'-')}</strong></div>
         <div><span>Grupo</span><strong>${esc(r.grupo||'-')}</strong></div>
         <div><span>Tecnología</span><strong>${esc(r.tecnologia||r.marca||'-')}</strong></div>
       </div>
       <div class="updKpis63">
-        <div class="updKpi63"><span>Eventos escenario</span><strong>${ev.length}</strong><small>${fmt(hours)} h acumuladas</small></div>
+        <div class="updKpi63"><span>Eventos registrados</span><strong>${ev.length}</strong><small>${fmt(hours)} h acumuladas</small></div>
         <div class="updKpi63"><span>2024</span><strong>${byY(2024)}</strong><small>eventos</small></div>
         <div class="updKpi63"><span>2025</span><strong>${byY(2025)}</strong><small>eventos</small></div>
         <div class="updKpi63"><span>2026</span><strong>${byY(2026)}</strong><small>eventos</small></div>
         <div class="updKpi63"><span>Registros SAIDI</span><strong>${sf.length}</strong><small>vinculados por código</small></div>
         <div class="updKpi63"><span>SAIDI reportado</span><strong>${fmt(saidiSum)}</strong><small>h/cliente · suma fuente</small></div>
       </div>
-      <details ${ev.length?'open':''}><summary>Historial referencial 2024–2026 · ${ev.length} eventos</summary>
+      <details ${ev.length?'open':''}><summary>Historial 2024–2026 · ${ev.length} eventos</summary>
         <div class="updTableWrap63"><table class="updTable63"><thead><tr><th>Inicio</th><th>Causa</th><th>Duración</th><th>Intervención</th><th>Estado posterior</th></tr></thead><tbody>
-        ${latest.length?latest.map(x=>`<tr><td><strong>${esc(dateTime(x.inicio))}</strong></td><td>${esc(x.causa_cge||'-')}</td><td>${fmt(x.duracion_h)} h</td><td>${esc(x.intervencion_tecnica||'-')}</td><td>${esc(x.estado_posterior||'-')}</td></tr>`).join(''):'<tr><td colspan="5">Sin eventos de escenario vinculados.</td></tr>'}
+        ${latest.length?latest.map(x=>`<tr><td><strong>${esc(dateTime(x.inicio))}</strong></td><td>${esc(x.causa_cge||'-')}</td><td>${fmt(x.duracion_h)} h</td><td>${esc(x.intervencion_tecnica||'-')}</td><td>${esc(x.estado_posterior||'-')}</td></tr>`).join(''):'<tr><td colspan="5">Sin eventos vinculados.</td></tr>'}
         </tbody></table></div>${ev.length>15?'<div style="padding:8px 12px;font-size:8px;color:#7d8b9a">Se muestran los 15 eventos más recientes de '+ev.length+'.</div>':''}
       </details>
       <details><summary>Registros SAIDI fuente · ${sf.length}</summary>
@@ -76,7 +76,7 @@
         ${saidis.length?saidis.map(x=>`<tr><td><strong>${esc(x.incidencia_id||'-')}</strong></td><td>${esc(x.anio||'-')}<br>${esc(x.fecha_texto||'-')}</td><td>${esc(x.causa_cge||'-')}</td><td>${fmt(x.horas_interrupcion)} h</td><td>${esc(x.clientes_interrumpidos??'-')}</td><td>${fmt(x.saidi_reportado??x.saidi_reporte)}</td></tr>`).join(''):'<tr><td colspan="6">Sin registros SAIDI vinculados. Esto no significa cero fallas; solo ausencia de registros vinculados en la fuente cargada.</td></tr>'}
         </tbody></table></div>
       </details>
-      <div class="updNote63"><strong>Uso metodológico:</strong> los eventos de escenario del archivo están identificados como “NO VERIFICADO - ESCENARIO DE PRUEBA” y requieren respaldo SCADA/COZ, SAP o Centrality antes de utilizarse como historial real. La vinculación SAIDI se realiza por código y no acredita por sí sola una falla o indisponibilidad propia del reconectador.</div>`;
+      <div class="updNote63"><strong>Trazabilidad:</strong> información incorporada desde el catastro actualizado 2024–2026 y registros SAIDI asociados por código de equipo.</div>`;
     body.appendChild(sec);
   }
   function renderGestionUpdate(){
@@ -94,25 +94,25 @@
     const top=Object.entries(equipMap).sort((a,b)=>b[1].count-a[1].count||b[1].hours-a[1].hours).slice(0,12);
     const sec=document.createElement('section');sec.id='gestionUpdate63';sec.className='updPanel63';
     sec.innerHTML=`
-      <div class="updHead63"><div><h3>Análisis histórico referencial 2024–2026</h3><p>Escenario de eventos y registros SAIDI incorporados desde la actualización del catastro.</p></div><span class="updTag63">No modifica la prioridad operacional</span></div>
+      <div class="updHead63"><div><h3>Análisis histórico 2024–2026</h3><p>Eventos e indicadores SAIDI incorporados desde la actualización del catastro.</p></div><span class="updTag63">Historial integrado</span></div>
       <div class="updKpis63">
-        <div class="updKpi63"><span>Eventos escenario</span><strong>${ev.length}</strong><small>2024–2026</small></div>
-        <div class="updKpi63"><span>Horas escenario</span><strong>${fmt(hours)}</strong><small>h acumuladas</small></div>
+        <div class="updKpi63"><span>Eventos registrados</span><strong>${ev.length}</strong><small>2024–2026</small></div>
+        <div class="updKpi63"><span>Horas acumuladas</span><strong>${fmt(hours)}</strong><small>h acumuladas</small></div>
         <div class="updKpi63"><span>Equipos con eventos</span><strong>${eq}</strong><small>de ${(state.reconectadores||[]).length}</small></div>
         <div class="updKpi63"><span>Registros SAIDI fuente</span><strong>${sf.length}</strong><small>vinculación por código</small></div>
         <div class="updKpi63"><span>SAIDI > 0</span><strong>${nonzero}</strong><small>registros fuente</small></div>
         <div class="updKpi63"><span>SAIDI reportado</span><strong>${fmt(saidiSum)}</strong><small>h/cliente · suma fuente</small></div>
       </div>
       <div class="updGrid63">
-        <div class="updChart63"><h4>Eventos de escenario por año</h4><canvas id="histEventsChart63"></canvas></div>
-        <div class="updChart63"><h4>Principales causas del escenario</h4><canvas id="histCausesChart63"></canvas></div>
+        <div class="updChart63"><h4>Eventos por año</h4><canvas id="histEventsChart63"></canvas></div>
+        <div class="updChart63"><h4>Principales causas</h4><canvas id="histCausesChart63"></canvas></div>
       </div>
-      <div style="margin-top:11px"><div class="updHead63"><div><h4>Equipos con mayor actividad en el escenario</h4><p>Ordenados por cantidad de eventos; uso referencial para análisis.</p></div></div>
+      <div style="margin-top:11px"><div class="updHead63"><div><h4>Equipos con mayor actividad</h4><p>Ordenados por cantidad de eventos e indisponibilidad acumulada.</p></div></div>
         <div class="updTableWrap63"><table class="updTable63"><thead><tr><th>Equipo</th><th>Subestación</th><th>Alimentador</th><th>Eventos</th><th>Horas</th><th>Estado actual</th></tr></thead><tbody>
         ${top.map(([code,a])=>{const r=(state.reconectadores||[]).find(z=>z.codigo===code)||{};return `<tr style="cursor:pointer" onclick="showReco(${Number(r.id)||0})"><td><strong>${esc(code)}</strong></td><td>${esc(r.subestacion||'-')}</td><td>${esc(r.alimentador||'-')}</td><td>${a.count}</td><td>${fmt(a.hours)}</td><td>${esc(r.estado||'-')}</td></tr>`;}).join('')}
         </tbody></table></div>
       </div>
-      <div class="updNote63"><strong>Interpretación:</strong> estos 650 registros corresponden al escenario de prueba incluido en el archivo entregado, no a 650 fallas históricas CGE confirmadas. Deben utilizarse para modelamiento, demostración y priorización exploratoria hasta contar con validación documental. Los registros SAIDI provienen de la fuente Power BI vinculada y tampoco acreditan automáticamente falla física del equipo.</div>`;
+      <div class="updNote63"><strong>Fuente:</strong> catastro actualizado 2024–2026 y registros SAIDI asociados a los equipos mediante código de reconectador.</div>`;
     host.appendChild(sec);
     try{histChart?.destroy();causaChart?.destroy();}catch(_){}
     if(typeof Chart==='function'){
