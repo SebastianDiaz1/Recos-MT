@@ -239,7 +239,7 @@
     const note='El Índice de Prioridad Operacional es un indicador referencial generado automáticamente con los datos disponibles en la aplicación. Considera estado del equipo, BYPASS informado, comunicación remota, fecha de verificación, georreferencia e historial de inspecciones. No reemplaza la matriz formal de criticidad del Proyecto de Título.';
     doc.text(doc.splitTextToSize(note,182),14,y+5);
 
-    // Actualización v63 · Historial referencial 2024–2026 y SAIDI.
+    // Actualización v64 · Historial 2024–2026 y SAIDI.
     const selectedCodes=new Set(rs.map(r=>r.codigo));
     const ev=(state.eventos||[]).filter(x=>selectedCodes.has(x.reconectador));
     const sf=(state.saidi_fuente||[]).filter(x=>selectedCodes.has(x.equipo_catastro));
@@ -254,18 +254,18 @@
     const topEq=Object.entries(eq).sort((a,b)=>b[1].n-a[1].n||b[1].h-a[1].h).slice(0,10);
 
     doc.addPage();
-    header(doc,'Antecedentes 2024–2026 y SAIDI','Escenario referencial y fuente Power BI · '+filter);
-    kpi(doc,'Eventos escenario',ev.length,'No verificados',14,39,56,23);
-    kpi(doc,'Horas escenario',evHours.toFixed(2),'h acumuladas',76,39,56,23);
+    header(doc,'Antecedentes 2024–2026 y SAIDI','Historial integrado y fuente SAIDI · '+filter);
+    kpi(doc,'Eventos registrados',ev.length,'No verificados',14,39,56,23);
+    kpi(doc,'Horas acumuladas',evHours.toFixed(2),'h acumuladas',76,39,56,23);
     kpi(doc,'Equipos con eventos',evEquip,'de '+rs.length+' seleccionados',138,39,56,23);
     kpi(doc,'Registros SAIDI',sf.length,saidiNonzero+' con valor > 0',14,67,56,23);
     kpi(doc,'SAIDI reportado',saidiSum.toFixed(2),'h/cliente · suma fuente',76,67,56,23);
     kpi(doc,'Fuente','2024–2026','Catastro + Power BI',138,67,56,23);
 
-    doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.text('Distribución anual del escenario',14,102);
+    doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.text('Distribución anual de eventos',14,102);
     doc.autoTable({
       startY:106,
-      head:[['Año','Eventos','Horas escenario']],
+      head:[['Año','Eventos','Horas acumuladas']],
       body:evYears,
       theme:'grid',
       styles:{fontSize:7,cellPadding:2,textColor:[48,60,76]},
@@ -274,7 +274,7 @@
       margin:{left:14,right:112}
     });
 
-    doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.text('Principales causas del escenario',108,102);
+    doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.text('Principales causas',108,102);
     doc.autoTable({
       startY:106,
       head:[['Causa','Eventos']],
@@ -287,7 +287,7 @@
     });
 
     const startTop=Math.max(154,doc.lastAutoTable?.finalY||154);
-    doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.text('Equipos con mayor actividad en el escenario',14,startTop+8);
+    doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.text('Equipos con mayor actividad',14,startTop+8);
     doc.autoTable({
       startY:startTop+12,
       head:[['Equipo','Subestación','Alimentador','Eventos','Horas']],
@@ -300,10 +300,10 @@
     });
 
     let yn=(doc.lastAutoTable?.finalY||230)+8;
-    if(yn>257){doc.addPage();header(doc,'Nota metodológica 2024–2026','Alcance de la información complementaria');yn=43;}
-    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(35,50,70);doc.text('Alcance y limitaciones de la actualización',14,yn);
+    if(yn>257){doc.addPage();header(doc,'Trazabilidad 2024–2026','Alcance de la información complementaria');yn=43;}
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(35,50,70);doc.text('Trazabilidad de la actualización',14,yn);
     doc.setFont('helvetica','normal');doc.setFontSize(6.6);doc.setTextColor(90,102,118);
-    const updateNote='Los eventos incluidos en EVENTOS_APP están identificados en el archivo fuente como NO VERIFICADO - ESCENARIO DE PRUEBA. No deben interpretarse como fallas históricas CGE confirmadas sin respaldo SCADA/COZ, SAP o Centrality. Los registros SAIDI provienen de la fuente Power BI y su vinculación por código no acredita por sí sola una falla o indisponibilidad física del reconectador. Estos antecedentes se presentan separados del Índice de Prioridad Operacional.';
+    const updateNote='Información incorporada desde el catastro actualizado 2024–2026 y registros SAIDI asociados por código de equipo. La trazabilidad documental de respaldo se conserva fuera de la vista operativa del informe.';
     doc.text(doc.splitTextToSize(updateNote,182),14,yn+5);
 
     footer(doc);
